@@ -2,13 +2,14 @@
 
 Erledigtes abhaken und mit Datum in [CHANGELOG.md](CHANGELOG.md) vermerken.
 
-## Einrichtung (siehe `.agents/skills/media-buying/docs/NEUES_STARTUP.md`)
+## Einrichtung (siehe `ANLEITUNG.md`; Stand prüft `einrichtung.py`)
 
 - [ ] `startup.json` mit dem Entscheider ausfüllen, danach `"beispiel": false`.
 - [ ] Profil `README.md`: Konten, Kampagnen, Attribution, Zielwerte mit Quellen, Befugnisse.
-- [ ] Regeln des Entscheiders in `regeln/MEDIA_BUYING_REGELN.md` (mit Quelle in `docs/quellen/`) oder bewusst leer lassen.
-- [ ] Meta-Token (nur `ads_read`, nur die Konten aus `startup.json`) und ggf. Triple-Whale-Key in `.env`.
+- [ ] **Media-Buying-Regeln festlegen** (ohne Regeln keine Entscheidungsgrundlage): Startregeln nach `references/regelvorlagen.md` des Skills, vom Entscheider bestätigt, in `regeln/MEDIA_BUYING_REGELN.md` mit Quelle in `docs/quellen/`.
+- [ ] Meta-Token (nur `ads_read`, nur die Konten aus `startup.json`) und ggf. Triple-Whale-Key als Umgebungsvariablen der Codex-Umgebung (lokal: `.env`).
 - [ ] Testdaten in `testdaten/testdaten.json` an die Kontoschlüssel anpassen.
+- [ ] `einrichtung.py` meldet „alles bereit“.
 
 ## Beim ersten Lauf
 

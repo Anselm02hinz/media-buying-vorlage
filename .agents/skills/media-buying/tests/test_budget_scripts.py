@@ -2,6 +2,8 @@
 
     python -m unittest discover .agents/skills/media-buying/tests
 """
+import contextlib
+import io
 import os
 import sys
 import tempfile
@@ -16,6 +18,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 import abgleich  # noqa: E402
 import akte  # noqa: E402
 import build_dataset  # noqa: E402
+import einrichtung  # noqa: E402
 import plan as plan_cmd  # noqa: E402
 import render_report  # noqa: E402
 from common import ACCOUNTS, CURRENCY_SIGN, FIXTURE, read_json, windows  # noqa: E402
@@ -134,7 +137,7 @@ class PhaseUndSeparat(unittest.TestCase):
                       "meta_taeglich": {"2026-10-25": {"spend": 60.0, "purchases": 2.0, "revenue": 90.0}},
                       "aenderungen": [{"zeit": "2026-10-25T03:00+01:00", "art": "budget", "vorher": 88.0,
                                        "nachher": 44.0, "wer": "Max Muster", "bewertung": "abweichend"}],
-                      "akte": ["25.10.2026 · Entscheidung · korrigiert, Grund: Bündelung"],
+                      "akte": ["25.10.2026 · Entscheidung · korrigiert, Grund: Testgrund"],
                       "hinweise": ["gestern erster vollständiger Liefertag"]},
                      {"id": "s", "name": "Follower", "budget": 5.0, "separat": "Follower", "meta": {}, "tw": None},
                      {"id": "p", "name": "Pausiert heute", "budget": 33.0, "effective_status": "PAUSED",
@@ -153,7 +156,7 @@ class PhaseUndSeparat(unittest.TestCase):
         self.assertIn("**A | Test** · `a` · 88", text)
         self.assertIn("- Tage: 25. 60/2/1.50", text)
         self.assertIn("25.10. 88→44 Max ABWEICHEND", text)
-        self.assertIn("- Akte: 25.10.2026 · Entscheidung · korrigiert, Grund: Bündelung", text)
+        self.assertIn("- Akte: 25.10.2026 · Entscheidung · korrigiert, Grund: Testgrund", text)
         self.assertIn("## B · ", text)
         self.assertIn("Pausiert heute", text)
         self.assertIn("separat laut startup.json: Follower", text)
@@ -190,7 +193,7 @@ class Bericht(unittest.TestCase):
         ds.update({"lauftag": "2026-10-22", "id": "D-1", "erstellt": "2026-10-22T03:00:00+02:00", "luecken": [],
                    "fenster": {"y": ["2026-10-21", "2026-10-21"], "d3": ["2026-10-19", "2026-10-21"],
                                "d7": ["2026-10-15", "2026-10-21"], "heute": ["2026-10-22", "2026-10-22"]},
-                   "meta": {"api_version": "v24.0", "kauf_action_type": "omni_purchase"}, "konten": {}})
+                   "meta": {"api_version": "v26.0", "kauf_action_type": "omni_purchase"}, "konten": {}})
         rows = render_report.build_rows(ds, {"entscheidungen": [
             {"id": "a", "ziel_budget": 44, "grund": "x", "kurzname": "A"},
             {"id": "b", "ziel_budget": 44, "grund": "y"}]})
@@ -256,14 +259,14 @@ class Testmodus(unittest.TestCase):
 class Freigabe(AktenImTempordner):
     def plan(self):
         return {"change_id": "A-1", "report_id": "R-1", "status": "VORGESCHLAGEN", "approval": {"status": "OFFEN"},
-                "rows": [{"id": "a", "code": "M01", "account_id": "1", "name": "A", "budget": 88.0,
+                "rows": [{"id": "a", "code": "A01", "account_id": "1", "name": "A", "budget": 88.0,
                           "status": "ACTIVE", "target_budget": 44, "target_status": "ACTIVE", "decision": "SENKEN",
                           "reason": "Grund Skill", "vorschlag": {"budget": 44, "status": "ACTIVE",
                                                                  "grund": "Grund Skill"}}]}
 
     def test_korrektur_behaelt_vorschlag_und_landet_in_akte(self):
         p = self.plan()
-        plan_cmd.cmd_korrigieren(p, SimpleNamespace(id="M01", budget=66.0, status=None, grund="Bündelung", von=None))
+        plan_cmd.cmd_korrigieren(p, SimpleNamespace(id="A01", budget=66.0, status=None, grund="Testgrund", von=None))
         row = p["rows"][0]
         self.assertEqual((row["target_budget"], row["decision"]), (66.0, "SENKEN"))
         self.assertEqual(row["reason"], "Grund Skill")
@@ -272,7 +275,7 @@ class Freigabe(AktenImTempordner):
         plan_cmd.cmd_freigeben(p, SimpleNamespace(von="Entscheider", wortlaut="Go mit Korrektur"))
         text = self.akte_datei("1", "a").read_text(encoding="utf-8")
         self.assertIn("korrigiert** – Vorschlag Skill 44", text)
-        self.assertIn("Grund: Bündelung", text)
+        self.assertIn("Grund: Testgrund", text)
         with self.assertRaises(SystemExit):  # nach Freigabe keine Korrektur mehr
             plan_cmd.cmd_korrigieren(p, SimpleNamespace(id="a", budget=88.0, status=None, grund=None, von=None))
 
@@ -289,14 +292,14 @@ class Freigabe(AktenImTempordner):
 
     def test_ausfuehren_ohne_freigabe_verweigert(self):
         with self.assertRaises(SystemExit):
-            plan_cmd.cmd_ausfuehren(self.plan(), "token", "v24.0")
+            plan_cmd.cmd_ausfuehren(self.plan(), "token", "v26.0")
 
     def test_ausfuehren_ohne_schreibschalter_verweigert(self):
         p = self.plan()
         plan_cmd.cmd_freigeben(p, SimpleNamespace(von="Entscheider", wortlaut="Go, alles wie vorgeschlagen"))
         os.environ.pop("META_WRITE_ENABLED", None)
         with self.assertRaises(SystemExit):
-            plan_cmd.cmd_ausfuehren(p, "token", "v24.0")
+            plan_cmd.cmd_ausfuehren(p, "token", "v26.0")
 
     def test_freigabe_braucht_wortlaut(self):
         with self.assertRaises(SystemExit):
@@ -335,7 +338,7 @@ class Akte(AktenImTempordner):
 
     def test_letzter_grund(self):
         at = "2026-10-28T12:00:00+01:00"
-        akte.schreiben("1", "a", "A", akte.eintrag(at, "Grund von T", "grund", f"a@{at}", "Bündelung"),
+        akte.schreiben("1", "a", "A", akte.eintrag(at, "Grund von Media Buyer", "grund", f"a@{at}", "Testgrund"),
                        "grund", f"a@{at}")
         self.assertEqual(akte.letzter_grund("1", "a"), at)
 
@@ -368,24 +371,9 @@ if __name__ == "__main__":
     unittest.main()
 
 
-class AltePlaeneKleinschreibung(unittest.TestCase):
-    """Pläne vom 18./19.10.2026 speichern den Status klein („active“, „paused“)."""
-
-    def test_wie_entschieden_trotz_kleinschreibung(self):
-        plan = {"change_id": "A-1", "rows": [{"id": "a", "target_status": "active", "target_budget": 100.0},
-                                             {"id": "b", "target_status": "paused", "target_budget": 33.0}]}
-        plans = [(datetime.fromisoformat("2026-10-19T03:35:00+02:00"), None, plan)]
-        zeit = "2026-10-19T05:00:00+02:00"
-        self.assertEqual(abgleich.bewerten({"art": "budget", "zeit": zeit, "id": "a", "nachher": 100.0}, plans)[0],
-                         "wie entschieden")
-        self.assertEqual(abgleich.bewerten({"art": "status", "zeit": zeit, "id": "b", "nachher": "Inaktiv"}, plans)[0],
-                         "wie entschieden")
-        self.assertEqual(abgleich.ziel_text("paused", 33.0), "AUS")
-
-
 class LueckenImMetaVerlauf(unittest.TestCase):
-    """Meta liefert den Änderungsverlauf unvollständig (28.10.2026): zwei Abrufwege, dazu Ableitung aus dem
-    letzten eigenen Datenstand."""
+    """Meta liefert den Änderungsverlauf unvollständig: zwei Abrufwege, dazu Ableitung aus dem letzten
+    eigenen Datenstand."""
 
     def test_abrufwege_werden_ohne_doppelungen_zusammengefuehrt(self):
         import fetch_meta
@@ -454,3 +442,93 @@ class StartupOrdner(unittest.TestCase):
             (root / "zweiter" / "startup.json").write_text("{}", encoding="utf-8")
             with self.assertRaises(SystemExit):
                 common.find_startup(root)  # mehrere
+
+
+class Einrichtung(unittest.TestCase):
+    """Prüfskript der Einrichtung: erkennt Platzhalter und Lücken, nennt den nächsten Schritt, zeigt nie Zugangsdaten."""
+
+    def test_platzhalter_der_vorlage(self):
+        vorlage = {"beispiel": True, "name": "Beispiel-Startup", "entscheider": "Vorname Nachname",
+                   "systemverantwortlich": "Vorname Nachname", "mindestbudget": 20, "mindestbudget_regel": "OFFEN",
+                   "zielwerte": {"ziel_roas": None, "break_even": {"Produkt A": None}},
+                   "konten": {"haupt": {"id": "100000000000001", "prefix": "A"}}, "triple_whale": {"aktiv": False}}
+        out = einrichtung.pruefe_stammdaten(vorlage, "startup")
+        self.assertEqual({b["schritt"] for b in out if b["status"] == "FEHLT"}, {"angaben", "konten", "bestaetigung"})
+        self.assertTrue(any(b["status"] == "OFFEN" and "Ziel-ROAS" in b["text"] for b in out))
+        self.assertTrue(any(b["status"] == "HINWEIS" and "umbenennen" in b["text"] for b in out))
+
+    def test_testdaten_ohne_konto(self):
+        out = einrichtung.pruefe_testdaten({KONTO: {}, "zweitkonto": {}}, FIXTURE)
+        self.assertEqual(out[0]["status"], "FEHLT")
+        self.assertIn("zweitkonto", out[0]["text"])
+
+    def test_kontovergleich(self):
+        gesehen = [{"account_id": "1", "currency": "USD", "timezone_name": "Europe/Berlin", "account_status": 1}]
+        out = einrichtung.vergleiche_konten({"a": {"id": "1"}, "b": {"id": "2"}}, gesehen, "Europe/Berlin", "EUR")
+        self.assertEqual([(b["status"], b["schritt"]) for b in out], [("FEHLT", "angaben"), ("FEHLT", "konten")])
+        self.assertIn("Währung USD", out[0]["text"])
+
+    def test_vorschlag_separat(self):
+        camps = [{"name": "Verkauf", "objective": "OUTCOME_SALES"}, {"name": "Follower", "objective": "OUTCOME_ENGAGEMENT"}]
+        self.assertEqual([c["name"] for c in einrichtung.vorschlag_separat(camps)], ["Follower"])
+
+    def test_naechster_schritt(self):
+        b = einrichtung.befund
+        nr, name, _ = einrichtung.naechster_schritt([b("FEHLT", "konten", "x"), b("FEHLT", "internet", "y"),
+                                                     b("OK", "meta", "z")])
+        self.assertEqual((nr, name), (3, "Internetzugang"))
+        self.assertIsNone(einrichtung.naechster_schritt([b("OK", "meta", "z"), b("OFFEN", "angaben", "o")])[0])
+
+    def test_netzfehler_heisst_internetzugang(self):
+        def offline(*args, **kwargs):
+            raise einrichtung.ApiError("GET https://graph.facebook.com/v26.0/me/adaccounts -> Temporary failure")
+
+        def token_abgelaufen(*args, **kwargs):
+            raise einrichtung.ApiError('GET x -> HTTP 400: {"error":{"message":"expired","code":190}}')
+
+        with mock.patch.object(einrichtung, "graph", offline):
+            out, konten = einrichtung.pruefe_meta("x", "v")
+        self.assertIsNone(konten)
+        self.assertEqual((out[0]["status"], out[0]["schritt"]), ("FEHLT", "internet"))
+        with mock.patch.object(einrichtung, "graph", token_abgelaufen):
+            out, _ = einrichtung.pruefe_meta("x", "v")
+        self.assertEqual(out[0]["schritt"], "meta")  # Meta-Fehler mit JSON-Antwort ist kein Netzproblem
+        self.assertIn("abgelaufen", out[0]["text"])
+
+    def test_token_nie_in_der_ausgabe(self):
+        geheim = "EAAgeheim123"
+        konten = [{"account_id": "1", "name": "K", "currency": "EUR", "timezone_name": "Europe/Berlin",
+                   "account_status": 1}]
+
+        def graph(path, token, version, **params):
+            return [{"permission": "ads_read", "status": "granted"}] if path == "me/permissions" else konten
+
+        buf = io.StringIO()
+        with mock.patch.dict(os.environ, {"META_ACCESS_TOKEN": geheim, "META_WRITE_ENABLED": "1"}), \
+                mock.patch.object(einrichtung, "graph", graph), mock.patch.object(einrichtung, "TEST_MODE", False), \
+                mock.patch.object(sys, "argv", ["einrichtung.py"]), contextlib.redirect_stdout(buf):
+            einrichtung.main()
+        text = buf.getvalue()
+        self.assertNotIn(geheim, text)
+        self.assertIn("META_ACCESS_TOKEN gesetzt", text)
+        self.assertIn("Schreibzugriff ist eingeschaltet", text)
+        self.assertIn("Nächster Schritt:", text)
+
+    def test_regeln_noetig_formatbeispiel_zaehlt_nicht(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "MEDIA_BUYING_REGELN.md"
+            path.write_text("# Regeln\n\n```markdown\n## MB-0001 · v1 · <Titel>\n```\n", encoding="utf-8")
+            self.assertEqual(einrichtung.pruefe_regeln(path)[0]["status"], "FEHLT")
+            path.write_text(path.read_text(encoding="utf-8") + "\n## MB-0001 · v1 · Erhöhen\n\n## MB-0002 · v1 · Senken\n",
+                            encoding="utf-8")
+            out = einrichtung.pruefe_regeln(path)
+        self.assertEqual((out[0]["status"], out[0]["text"]), ("OK", "2 Media-Buying-Regeln festgelegt"))
+
+    def test_token_erinnerung(self):
+        from common import token_erinnerung
+        startup = {"meta_token": {"erstellt": "2026-01-01", "erneuern_nach_tagen": 180}}  # fällig am 30.06.
+        self.assertIsNone(token_erinnerung(startup, date(2026, 6, 1)))
+        self.assertIn("in 10 Tagen fällig", token_erinnerung(startup, date(2026, 6, 20)))
+        self.assertIn("seit 2 Tagen fällig", token_erinnerung(startup, date(2026, 7, 2)))
+        self.assertIsNone(token_erinnerung({"meta_token": {"erstellt": None}}, date(2026, 7, 2)))
+        self.assertEqual(einrichtung.pruefe_token({}, date(2026, 7, 2), True)[0]["status"], "OFFEN")

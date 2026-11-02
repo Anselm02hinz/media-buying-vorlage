@@ -12,8 +12,8 @@ import re
 import time
 from datetime import date, datetime, timedelta
 
-from common import (ACCOUNTS, FIXTURE, TEST_MODE, TZ, ApiError, http_json, now_iso, raw_dir, read_json,
-                    require_env, require_real_data, write_json)
+from common import (ACCOUNTS, FIXTURE, META_API_VERSION, TEST_MODE, TZ, ApiError, http_json, now_iso, raw_dir,
+                    read_json, require_env, require_real_data, write_json)
 
 ADSET_FIELDS = ("id,name,status,effective_status,daily_budget,lifetime_budget,budget_remaining,bid_strategy,"
                 "start_time,end_time,created_time,updated_time,attribution_spec,"
@@ -24,7 +24,7 @@ INSIGHT_FIELDS = ("adset_id,adset_name,campaign_id,campaign_name,spend,impressio
                   "inline_link_clicks,actions,action_values,account_currency")
 ACCOUNT_FIELDS = "id,name,currency,timezone_name,account_status,disable_reason,spend_cap,amount_spent"
 ACTIVITY_FIELDS = "event_time,event_type,object_id,object_name,object_type,extra_data,actor_name,application_name"
-# Meta drosselt je Werbekonto; in der Zugriffsstufe „development_access“ sperrt es nach wenigen Dutzend Aufrufen
+# Meta drosselt je Werbekonto; in der Zugriffsstufe „Limited access“ sperrt es nach wenigen Dutzend Aufrufen
 # für einige Minuten (Fehlercodes 4, 17, 613, 80004). Dann einmal warten und wiederholen.
 DROSSELUNG = re.compile(r'"code":\s*(4|17|613|80004)\b')
 WARTEN = 310
@@ -79,9 +79,9 @@ def fetch_account(key, run_day, days, token, version):
 def activities(act, since, run_day, token, version):
     """Änderungsverlauf, am Stück und tageweise abgerufen und ohne Doppelungen zusammengeführt.
 
-    Meta liefert `activities` unvollständig und nicht reproduzierbar (geprüft 28.10.2026): Beide Wege verlieren
-    jeweils andere Einträge, in einem Konto fehlten am Stück ganze Nachtrunden. Was trotzdem fehlt, leitet
-    `build_dataset.py` aus dem Vergleich mit dem letzten eigenen Datenstand ab."""
+    Meta liefert `activities` unvollständig und nicht reproduzierbar: Beide Wege verlieren jeweils andere
+    Einträge, am Stück können ganze Zeiträume fehlen. Was trotzdem fehlt, leitet `build_dataset.py` aus dem
+    Vergleich mit dem letzten eigenen Datenstand ab."""
     stamp = lambda d: int(datetime.combine(d, datetime.min.time(), TZ).timestamp())  # noqa: E731
     am_stueck = graph(f"{act}/activities", token, version, since=stamp(since), limit=500, fields=ACTIVITY_FIELDS)
     tageweise, day = [], since
@@ -142,7 +142,7 @@ def main():
     run_day = date.fromisoformat(args.tag)
     if not TEST_MODE:
         token, = require_env("META_ACCESS_TOKEN")
-        version = os.environ.get("META_API_VERSION") or "v24.0"
+        version = META_API_VERSION
     failed = []
     for key in args.konten:
         try:

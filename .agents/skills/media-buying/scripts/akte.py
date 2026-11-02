@@ -2,7 +2,7 @@
 
 Ein Eintrag beginnt mit einer Kopfzeile, die eine unsichtbare Marke trägt, und endet mit `---`:
 
-    ## 28.10.2026 11:30 · Vorschlag · A-20261028-001 <!-- akte:vorschlag:A-20261028-001 -->
+    ## 15.01.2026 11:30 · Vorschlag · A-20260115-001 <!-- akte:vorschlag:A-20260115-001 -->
 
     Text
 
@@ -25,7 +25,7 @@ def marke(art, key):
 
 
 def eintrag(zeit, titel, art, key, text):
-    """zeit: ISO-Zeit mit Offset; titel: z. B. „Vorschlag · A-20261028-001“."""
+    """zeit: ISO-Zeit mit Offset; titel: z. B. „Vorschlag · A-20260115-001“."""
     when = f"{zeit[8:10]}.{zeit[5:7]}.{zeit[:4]} {zeit[11:16]}".strip()
     return f"## {when} · {titel} {marke(art, key)}\n\n{text.strip()}\n{ENTRY_END}\n"
 
@@ -60,7 +60,7 @@ def letzter_grund(account_id, adset_id):
 
 
 def auszug(account_id, adset_id, anzahl=2, laenge=280):
-    """Die neuesten Einträge mit Begründungen (Vorschlag, Entscheidung, Grund, Prüfung, ältere Einträge ohne Marke),
+    """Die neuesten Einträge mit Begründungen (Vorschlag, Entscheidung, Grund, Prüfung, Einträge ohne Marke),
     gekürzt und ohne Links, für die Übersicht. Reine Meta-Änderungen werden übersprungen."""
     path = akte_path(account_id, adset_id)
     if not path.exists():

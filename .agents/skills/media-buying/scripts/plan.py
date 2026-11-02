@@ -19,8 +19,8 @@ import argparse
 import os
 
 import akte
-from common import (CURRENCY_SIGN, STARTUP, TEST_MODE, ApiError, datei, http_json, in_runden, now_iso, read_json,
-                    require_env, require_real_data, write_json)
+from common import (CURRENCY_SIGN, META_API_VERSION, STARTUP, TEST_MODE, ApiError, datei, http_json, in_runden, now_iso,
+                    read_json, require_env, require_real_data, write_json)
 from render_report import LABEL, MIN_BUDGET, MIN_RULE, decision
 
 
@@ -219,7 +219,7 @@ def main():
         p = sub.add_parser(name)
         p.add_argument("--plan", required=name != "begruenden")
         if name in ("korrigieren", "begruenden"):
-            p.add_argument("--id", required=True, help="Adset-ID oder Code aus dem Bericht (z. B. J28)")
+            p.add_argument("--id", required=True, help="Adset-ID oder Code aus dem Bericht (z. B. A01)")
             p.add_argument("--grund", required=name == "begruenden")
             p.add_argument("--von", help="Standard: Entscheider aus startup.json")
         if name == "korrigieren":
@@ -248,7 +248,7 @@ def main():
         refuse_test(plan, "Ausführung" if args.cmd == "ausfuehren" else "Prüfung")
         require_real_data()
         token, = require_env("META_ACCESS_TOKEN")
-        version = os.environ.get("META_API_VERSION") or "v24.0"
+        version = META_API_VERSION
         if args.cmd == "ausfuehren":
             cmd_ausfuehren(plan, token, version)
         else:

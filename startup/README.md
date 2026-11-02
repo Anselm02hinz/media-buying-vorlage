@@ -1,6 +1,6 @@
 # Profil · Beispiel-Startup
 
-Basis-Infos zu diesem Startup an einer Stelle. Eingerichtet nach `.agents/skills/media-buying/docs/NEUES_STARTUP.md` am OFFEN. Stand OFFEN. OFFEN heißt unbekannt, nicht null und nicht freigegeben. Änderungen nur nach Bestätigung des Entscheiders (`AGENTS.md`).
+Basis-Infos zu diesem Startup an einer Stelle. Eingerichtet nach `ANLEITUNG.md` am OFFEN. Stand OFFEN. OFFEN heißt unbekannt, nicht null und nicht freigegeben. Änderungen nur nach Bestätigung des Entscheiders (`AGENTS.md`).
 
 Werte, die die Skripte nutzen (Entscheider, Konten, Währung, Zeitzone, Zielwerte, Mindestbudget, Triple-Whale-Einstellungen), stehen nur in [startup.json](startup.json). Dieses Profil erklärt Hintergrund, Geltung und Quellen. Aufbau des Ordners: `references/dokumentation.md` des Skills.
 

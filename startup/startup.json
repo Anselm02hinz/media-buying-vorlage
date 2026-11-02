@@ -1,5 +1,5 @@
 {
-  "_hinweis": "Stammdaten des Startups. Die Skripte lesen alle startup-spezifischen Werte nur hier. Hintergrund und Quellen stehen im Profil README.md, die Regeln in regeln/MEDIA_BUYING_REGELN.md. Felder mit _hinweis erklären das Feld davor. Ausfüllen nach NEUES_STARTUP.md.",
+  "_hinweis": "Stammdaten des Startups. Die Skripte lesen alle startup-spezifischen Werte nur hier. Hintergrund und Quellen stehen im Profil README.md, die Regeln in regeln/MEDIA_BUYING_REGELN.md. Felder mit _hinweis erklären das Feld davor. Ausfüllen bei der Einrichtung (references/einrichtung.md des Skills).",
   "beispiel": true,
   "beispiel_hinweis": "true = Beispielwerte aus der Vorlage; dann ist nur ein Testlauf erlaubt. Erst auf false setzen, wenn alle Werte vom Entscheider bestätigt sind.",
 
@@ -31,6 +31,9 @@
 
   "separat": {"kampagnen": {}, "adsets": {}},
   "separat_hinweis": "Keine Verkaufs-Adsets (z. B. Follower): nicht im Plan, keine Mindestbudget-Prüfung, im Bericht unter „Separat“. Schlüssel = Kampagnen- bzw. Adset-ID, Wert = Anzeigename. Eine Kampagne hier nimmt alle ihre Adsets aus.",
+
+  "meta_token": {"erstellt": null, "erneuern_nach_tagen": 180},
+  "meta_token_hinweis": "Nur das Datum (YYYY-MM-DD), an dem der Meta-Token erstellt wurde, nie der Token selbst. Meta bietet nur „nie“ oder 60 Tage Ablauf; der Token läuft deshalb nie ab und wird nach erneuern_nach_tagen erneuert. Der Skill erinnert 14 Tage vorher.",
 
   "triple_whale": {
     "aktiv": false,

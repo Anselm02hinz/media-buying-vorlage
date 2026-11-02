@@ -15,7 +15,7 @@ Jede Information steht an einer Stelle; andere Dateien verlinken nur. **Ausnahme
 ├── runden/YYYY-MM-DD/    alles einer Runde: Datenstand, Übersicht, Bericht, Plan, Verifikation; rohdaten/ nur lokal
 ├── testdaten/            testdaten.json (erfunden); testlaeufe/ mit denselben Unterordnern runden/ und akten/
 └── docs/                 liest der Skill in einer Runde nicht: quellen/ (Originalquellen Q-…), regelhistorie/
-                          (alte Regelfassungen, Änderungsverlauf), ggf. altberichte/, TODO.md, CHANGELOG.md
+                          (alte Regelfassungen, Änderungsverlauf), TODO.md, CHANGELOG.md
 ```
 
 Faustregel: Was der Skill in einer normalen Runde liest oder schreibt, liegt direkt in `<startup>/` oder in `regeln/`, `akten/`, `runden/`. Was nur belegt, beschreibt oder den Verlauf festhält, liegt in `docs/`. Verweise möglichst über IDs (`R-…`, `A-…`, `D-…`, `Q-…`, `MB-…`, `L-…`) statt über Pfade; IDs bleiben bei einem Umzug gültig.
@@ -43,7 +43,7 @@ IDs: Bericht `R-YYYYMMDD-NNN` (nächste freie Nummer des Tages) und Plan `A-YYYY
 
 ## Akte
 
-Die Skripte schreiben die Akten; die KI ändert sie nicht von Hand. Jeder Eintrag trägt eine unsichtbare Marke (`<!-- akte:<art>:<schlüssel> -->`), damit ein wiederholter Lauf nichts doppelt einträgt. Arten: `meta` (Änderung laut Meta mit Person, Werkzeug und Einordnung „wie entschieden“, „abweichend“ oder „ohne Plan“), `vorschlag` (wird bis zur Freigabe beim Neu-Rendern ersetzt), `entscheidung`, `grund`, `pruefung`. Ältere Einträge ohne Marke stammen aus dem früheren System und bleiben unverändert. Fortgeschrieben werden alle Adsets, die aktiv sind oder im Abrufzeitraum geliefert haben.
+Die Skripte schreiben die Akten; die KI ändert sie nicht von Hand. Jeder Eintrag trägt eine unsichtbare Marke (`<!-- akte:<art>:<schlüssel> -->`), damit ein wiederholter Lauf nichts doppelt einträgt. Arten: `meta` (Änderung laut Meta mit Person, Werkzeug und Einordnung „wie entschieden“, „abweichend“ oder „ohne Plan“), `vorschlag` (wird bis zur Freigabe beim Neu-Rendern ersetzt), `entscheidung`, `grund`, `pruefung`. Fortgeschrieben werden alle Adsets, die aktiv sind oder im Abrufzeitraum geliefert haben.
 
 ## AKTUELL.md
 

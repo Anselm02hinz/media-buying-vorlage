@@ -1,14 +1,14 @@
 """Erzeugt aus Datenstand und KI-Entscheidungen den HTML-Budgetbericht und den Ausführungsplan.
 
 Erster Lauf: Entscheidungen als JSON (vorübergehend, z. B. in runden/YYYY-MM-DD/rohdaten/):
-    {"auftrag": "Wortlaut des Auftrags des Entscheiders mit Zeit, z. B. „Mach mein Media Buying für heute“ (28.10. 02:50)",
-     "kopf": "Gewinner stärken. Erfolglose Tests begrenzen.",
+    {"auftrag": "Wortlaut des Auftrags des Entscheiders mit Zeit, z. B. „Mach mein Media Buying für heute“ (TT.MM. hh:mm)",
+     "kopf": "Kernaussage in einem Satz.",
      "notizen": [{"titel": "Gezielt hoch", "text": "..."}, ...],
      "kontohinweise": {"<kontoschlüssel aus startup.json>": "Alle aktiven Sets halten."},
      "separat": "Text zu CBOs/Follower/Sonstigem (optional)",
      "grenzen": ["zusätzliche Hinweise zu Datenstand und Grenzen (optional)"],
      "entscheidungen": [{"id": "<adset_id>", "ziel_status": "ACTIVE|PAUSED", "ziel_budget": 44,
-                         "grund": "...", "regeln": ["MB-0003 v1", "L-03"], "kurzname": "Video 12 · Test 1"}]}
+                         "grund": "...", "regeln": ["MB-0003 v1", "L-03"], "kurzname": "Produkt A · Test 1"}]}
     In "regeln" stehen Regel-IDs mit Version und die IDs bestätigter Learnings, die den Vorschlag geprägt haben.
     python render_report.py --datenstand D-…-budget.json --entscheidungen entscheidungen.json
 
@@ -50,7 +50,7 @@ MONTHS = ["JANUAR", "FEBRUAR", "MÄRZ", "APRIL", "MAI", "JUNI", "JULI", "AUGUST"
           "NOVEMBER", "DEZEMBER"]
 E = html.escape
 
-# Gestaltung aus den ersten Budgetberichten übernommen (offene Tabellen, keine Aufklappfelder).
+# Gestaltung: offene Tabellen, keine Aufklappfelder.
 STYLE = """*{box-sizing:border-box}html{scroll-behavior:smooth;scroll-padding-top:25px}body{margin:0;background:#f5f7f9;color:#172330;font:15px/1.48 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}main{max-width:1370px;margin:auto;padding:40px 36px 70px}a{color:inherit;text-decoration:none}a:hover{text-decoration:underline}h1{font-size:34px;letter-spacing:-1px;line-height:1.15;margin:8px 0 12px}h2{font-size:20px;letter-spacing:-.4px;margin:0 0 16px}h2 span{font-size:13px;font-weight:500;color:#687480;margin-left:8px}.kicker{color:#60707d;font-size:12px;font-weight:750;letter-spacing:1.3px}.intro{max-width:960px;color:#536170}.status{display:inline-block;color:#835b13;background:#fff0cf;border:1px solid #ecd59e;border-radius:5px;padding:5px 10px;font-size:12px;font-weight:650}.status.ok{color:#1d6146;background:#e3f4ea;border-color:#b5dcc4}.cards{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin:25px 0 18px}.card,.quick{background:#fff;border:1px solid #dce3e8;border-radius:10px;padding:24px}.card h2{margin-bottom:12px}.big{font-size:28px;font-weight:700;letter-spacing:-.7px}.sub{font-size:13px;color:#667380}.counts{margin-top:15px;padding-top:12px;border-top:1px solid #e8edf0;font-size:13px;color:#516171}.note{padding:15px 18px;background:#eaf1f4;border-radius:7px;font-size:13px;color:#3d5160;margin:12px 0}.note.warn{background:#fff4dc;color:#6b4d12}.focus{font-size:15px;margin:22px 0}.nav{display:flex;gap:20px;flex-wrap:wrap;font-size:13px;margin:20px 0 24px;color:#315f7c}.quickgrid{display:grid;grid-template-columns:1fr 1fr;gap:18px;align-items:start}table{width:100%;border-collapse:collapse;table-layout:fixed}th{text-align:left;font-size:12px;color:#60707f;padding:10px 9px;border-bottom:2px solid #dbe2e7}td{padding:11px 9px;border-bottom:1px solid #e8edf1;vertical-align:top}.quicktable{table-layout:auto;font-size:13px}.quicktable th:last-child,.quicktable td:last-child{text-align:right;white-space:nowrap;font-weight:650}.quicktable td{padding:8px 0}.quicktable a{display:flex;gap:10px}.quicktable small{color:#8a96a0;font-size:10px;line-height:20px;min-width:23px}.group td{font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#6b7b89;padding:17px 0 7px!important;background:#fff}.up{color:#217052}.down{color:#a66a20}.off{color:#a34a51}.hold{color:#4e626e}.legend{margin:48px 0 18px;padding-top:26px;border-top:1px solid #d8e0e5;color:#516170;font-size:13px}.legend h2{font-size:25px;color:#182a38;margin-bottom:8px}.evidence{background:white;border:1px solid #dce3e8;border-radius:10px;padding:22px;margin:20px 0 30px}.evidence th{background:#f3f6f8}.evidence td{padding:17px 10px}.adtitle{display:flex;gap:8px}.adtitle em{font-style:normal;font-size:10px;color:#8b98a3;margin-top:4px;min-width:23px}.adtitle strong{font-size:14px}.reason{font-size:12px;color:#556572;margin:8px 0 8px 31px;line-height:1.5}.id{font-size:10px;color:#88959e;margin-left:31px;font-variant-numeric:tabular-nums}.budget strong{display:block;font-size:15px;white-space:nowrap}.budget small{font-size:10px}.metrics div{display:flex;justify-content:space-between;gap:7px;white-space:nowrap;font-size:12px}.metrics b{font-weight:700}.metrics span{font-size:10px;color:#536878}.metrics .tw{margin:4px 0 7px;color:#4d6380}.metrics small{display:block;font-size:10px;line-height:1.65;color:#788793}.footer{font-size:12px;color:#60727f;background:#eaf0f4;padding:22px;border-radius:8px}.footer p{margin:9px 0}tr:target{background:#fff7dc}footer{font-size:11px;color:#83919b;margin-top:28px} @media(max-width:1000px){main{padding:24px 16px}.quickgrid,.cards{grid-template-columns:1fr}.evidence{overflow-x:auto;padding:14px}.evidence table{min-width:1080px}.big{font-size:25px}} @media print{body{background:#fff}main{max-width:none;padding:0}.quickgrid{display:block}.quick{margin-bottom:20px}.nav{display:none}tr{break-inside:avoid}.evidence{overflow:visible}h2{break-after:avoid}}
 .cards,.quickgrid{grid-template-columns:repeat(3,minmax(0,1fr))}.big{font-size:27px}.reason{line-height:1.5}.evidence{scroll-margin-top:14px}.id{overflow-wrap:anywhere}.note{line-height:1.6}.quicktable td{vertical-align:top}.metrics{font-variant-numeric:tabular-nums}.tw{margin-top:5px}.quicktable small{display:block}@media(max-width:1100px){.cards,.quickgrid{grid-template-columns:1fr}}"""
 
@@ -176,7 +176,7 @@ def money(v, digits=0):
 
 
 def targets_text():
-    """Zielwerte aus startup.json als Satz, z. B. „Meta-Ziel 1,50; Break-even Produkt A 1,40, Produkt B offen.“"""
+    """Zielwerte aus startup.json als Satz, z. B. „Meta-Ziel <ziel_roas>; Break-even Produkt A <wert>, Produkt B offen.“"""
     z = STARTUP.get("zielwerte") or {}
     goal = f"Meta-Ziel {num(z['ziel_roas'])}" if z.get("ziel_roas") is not None else "Meta-Ziel offen"
     be = z.get("break_even") or {}

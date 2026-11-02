@@ -17,7 +17,7 @@ from datetime import date, datetime, time, timedelta
 import akte
 from abgleich import STATUS, abgleichen
 from common import (ACCOUNTS, CURRENCY_SIGN, ROOT, STARTUP, STARTUP_DIR, TW, TZ, in_runden, now_iso, raw_dir, read_json, runde,
-                    separat_name, windows, write_json, write_text)
+                    separat_name, token_erinnerung, windows, write_json, write_text)
 
 PURCHASE_TYPES = ("omni_purchase", "purchase", "offsite_conversion.fb_pixel_purchase")
 CHANGE_EVENTS = ("update_ad_set_budget", "update_ad_set_run_status", "update_ad_set_bid_strategy",
@@ -342,6 +342,9 @@ def overview(data):
              f"**Kontrolle:** {k.get('aktiv_meta', '?')} aktive Adsets laut Meta = {len(a)} zu entscheiden (A) "
              f"+ {len(c)} mit Kampagnenbudget oder separat (C)."
              + ("" if k.get("aktiv_meta") == len(a) + len(c) else " **ABWEICHUNG – Datenstand prüfen.**"), ""]
+    erinnerung = None if data["test"] else token_erinnerung(STARTUP, date.fromisoformat(data["lauftag"]))
+    if erinnerung:
+        lines += [f"**Erinnerung:** {erinnerung}", ""]
     if data["luecken"]:
         lines += ["**Lücken:** " + " · ".join(data["luecken"]), ""]
     fragen = data.get("offene_fragen") or []

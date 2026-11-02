@@ -51,7 +51,7 @@ def bewerten(ev, plans):
     row = next((r for r in plan[2].get("rows", []) if r["id"] == ev["id"]), None)
     if not row:
         return "ohne Plan", plan, None
-    target = str(row["target_status"]).upper()  # Pläne vom 18./19.10. speichern „active“/„paused“
+    target = str(row["target_status"]).upper()
     if ev["art"] == "status":
         ok = STATUS.get(str(ev["nachher"]).strip().lower()) == target
     else:
@@ -110,7 +110,6 @@ def abgleichen(events, rows_by_id, seit):
                 and not (grund and datetime.fromisoformat(grund) >= t)):
             fragen.append({**item, "konto": r["konto"], "name": r["name"], "text": text})
     for _, path, plan in plans:
-        # Pläne aus dem früheren System (ohne "bericht") sind Historie: nur lesen, nicht umschreiben
-        if path in dirty and "bericht" in plan:
+        if path in dirty:
             write_json(path, plan)
     return per_adset, fragen

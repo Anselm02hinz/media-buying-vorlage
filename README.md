@@ -7,15 +7,14 @@ Dieses Repository gehört zu: **siehe `<startup>/startup.json`** (Name, Entschei
 ## Aufbau
 
 ```
-AGENTS.md  CLAUDE.md  README.md  .env.example  .gitignore    Einstieg (Kern, im Root nötig)
+AGENTS.md  CLAUDE.md  README.md  ANLEITUNG.md  .env.example  .gitignore    Einstieg (Kern, im Root nötig)
 
 .agents/skills/media-buying/     KERN – für jedes Startup gleich, als Ganzes übertragbar
 ├── SKILL.md                     Ablauf der Budgetrunde
-├── scripts/                     Abruf, Datenstand, Bericht, Plan
-├── references/                  liest die KI gezielt: Meta-API, Triple-Whale-API, Dokumentation und Ablage
+├── scripts/                     Abruf, Datenstand, Bericht, Plan, Einrichtungsprüfung
+├── references/                  liest die KI gezielt: Einrichtung, Meta-API, Triple-Whale-API, Dokumentation und Ablage
 ├── tests/                       Tests ohne Netzwerk
-├── assets/vorlage_startup/      Startpaket für ein neues Startup
-└── docs/                        für Menschen: NEUES_STARTUP.md, CHANGELOG.md des Kerns
+└── docs/                        für Menschen: CHANGELOG.md des Kerns
 
 <startup>/                       STARTUP – alles Individuelle (Ordner mit startup.json, z. B. startup/ oder acme/)
 ├── startup.json                 Stammdaten für die Skripte
@@ -45,8 +44,16 @@ Einzelheiten: [SKILL.md](.agents/skills/media-buying/SKILL.md). Dokumentation (P
 
 ## Einrichtung und Tests
 
-- Neues Startup: [NEUES_STARTUP.md](.agents/skills/media-buying/docs/NEUES_STARTUP.md).
+- Neues Startup: [ANLEITUNG.md](ANLEITUNG.md) (Schritt für Schritt für den Media Buyer; danach führt Codex durch die Einrichtung nach [einrichtung.md](.agents/skills/media-buying/references/einrichtung.md)). Stand prüfen: `python .agents/skills/media-buying/scripts/einrichtung.py`.
 - Zugänge: `.env.example` nach `.env` kopieren (wird nicht versioniert) oder dieselben Namen als Umgebungsvariablen setzen. Schreibzugriff auf Meta bleibt aus, bis Entscheider oder Systemverantwortlicher ihn freischalten.
 - Testlauf ohne Zugänge: `MEDIA_BUYING_MODUS=test` (erfundene Daten aus `<startup>/testdaten/`, Ergebnisse nur in `<startup>/testdaten/testlaeufe/`).
 - Tests: `python -m unittest discover .agents/skills/media-buying/tests` (Python ≥ 3.9, keine Pakete; unter Windows zusätzlich `tzdata`, z. B. `uv run --no-project --with tzdata python -m unittest discover .agents/skills/media-buying/tests`).
 - Änderungen am Kern: [CHANGELOG.md](.agents/skills/media-buying/docs/CHANGELOG.md) · Änderungen des Startups: `<startup>/docs/CHANGELOG.md` · offene Punkte: `<startup>/docs/TODO.md`.
+
+## Vorlage verschicken (Systemverantwortlicher)
+
+Die Vorlage geht als ZIP per Mail an das Startup. Erzeugen aus einem sauberen Stand der neutralen Vorlage:
+
+`git archive --format=zip -o media-buying-vorlage.zip HEAD`
+
+Das ZIP enthält nur versionierte Dateien, auch versteckte (`.agents/`, `.gitignore`, `.env.example`), aber keine Git-Historie, keine `.env` und keine Caches. Nie aus einem Startup-Repository verschicken: Dessen Ordner `<startup>/` enthält echte Daten. Kernänderungen später in bestehende Startup-Repositorys übertragen: nur den Ordner `.agents/skills/media-buying/` und die Einstiegsdateien im Root ersetzen, nie `<startup>/`.

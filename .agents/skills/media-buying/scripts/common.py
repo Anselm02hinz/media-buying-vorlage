@@ -32,7 +32,7 @@ def find_startup(root):
     found = sorted(p.parent for p in root.glob("*/startup.json"))
     if not found:
         raise SystemExit("Kein Startup-Ordner (Ordner im Repository-Root mit startup.json). Für ein neues Startup siehe "
-                         ".agents/skills/media-buying/docs/NEUES_STARTUP.md.")
+                         "ANLEITUNG.md.")
     if len(found) > 1:
         raise SystemExit(f"Mehrere Ordner mit startup.json: {', '.join(p.name for p in found)}. Erlaubt ist genau einer.")
     return found[0]
@@ -93,6 +93,24 @@ def load_env():
 
 
 load_env()
+META_API_VERSION = os.environ.get("META_API_VERSION") or "v26.0"
+TOKEN_VORLAUF = 14  # Tage: so früh erinnert der Skill an die Erneuerung des Meta-Tokens
+
+
+def token_erinnerung(startup, heute):
+    """Erinnerung, den Meta-Token zu erneuern, oder None. Meta bietet für Systemnutzer-Token nur „nie“ oder 60 Tage;
+    das Startup legt ihn ohne Ablauf an und erneuert ihn nach `meta_token.erneuern_nach_tagen` (startup.json)."""
+    info = startup.get("meta_token") or {}
+    if not info.get("erstellt"):
+        return None
+    faellig = date.fromisoformat(info["erstellt"]) + timedelta(days=info.get("erneuern_nach_tagen") or 180)
+    rest = (faellig - heute).days
+    if rest > TOKEN_VORLAUF:
+        return None
+    wann = f"seit {-rest} Tagen fällig" if rest < 0 else "heute fällig" if rest == 0 else f"in {rest} Tagen fällig"
+    return f"Meta-Token erneuern, {wann} (ANLEITUNG.md, B6)."
+
+
 # MEDIA_BUYING_MODUS=test: Testdaten aus <startup>/testdaten statt API, Bericht als TESTLAUF, keine Ausführung/Prüfung.
 TEST_MODE = os.environ.get("MEDIA_BUYING_MODUS", "").strip().lower() == "test"
 FIXTURE = STARTUP_DIR / "testdaten" / "testdaten.json"
@@ -105,7 +123,8 @@ def require_real_data():
     """Echte Läufe nur mit echten Startup-Daten; Beispielwerte der Vorlage erlauben nur den Testlauf."""
     if STARTUP.get("beispiel") and not TEST_MODE:
         raise SystemExit(f"{STARTUP_DIR.name}/startup.json enthält noch Beispielwerte (\"beispiel\": true). "
-                         "Nur Testlauf möglich (MEDIA_BUYING_MODUS=test); für echte Läufe zuerst NEUES_STARTUP.md abarbeiten.")
+                         "Nur Testlauf möglich (MEDIA_BUYING_MODUS=test); für echte Läufe zuerst die Einrichtung "
+                         "abschließen (references/einrichtung.md, Stand: einrichtung.py).")
 
 
 def require_env(*names):
@@ -177,7 +196,7 @@ def in_runden(muster):
 
 
 def datei(value):
-    """Pfad oder bloßer Dateiname einer Runde (z. B. AUSFUEHRUNGSPLAN_20261028_BUDGET.json)."""
+    """Pfad oder bloßer Dateiname einer Runde (z. B. AUSFUEHRUNGSPLAN_20260115_BUDGET.json)."""
     p = Path(value)
     if p.exists():
         return p
