@@ -1,0 +1,44 @@
+{
+  "_hinweis": "Stammdaten des Startups. Die Skripte lesen alle startup-spezifischen Werte nur hier. Hintergrund und Quellen stehen im Profil README.md, die Regeln in regeln/MEDIA_BUYING_REGELN.md. Felder mit _hinweis erklären das Feld davor. Ausfüllen nach NEUES_STARTUP.md.",
+  "beispiel": true,
+  "beispiel_hinweis": "true = Beispielwerte aus der Vorlage; dann ist nur ein Testlauf erlaubt. Erst auf false setzen, wenn alle Werte vom Entscheider bestätigt sind.",
+
+  "name": "Beispiel-Startup",
+  "entscheider": "Vorname Nachname",
+  "entscheider_hinweis": "Gibt Budgetpläne frei, gibt Regeln vor und setzt freigegebene Pläne um, solange der Schreibzugriff gesperrt ist.",
+  "systemverantwortlich": "Vorname Nachname",
+  "systemverantwortlich_hinweis": "Pflegt das System; darf zusammen mit dem Entscheider den Schreibzugriff freischalten.",
+
+  "zeitzone": "Europe/Berlin",
+  "waehrung": "EUR",
+  "waehrungszeichen": "€",
+
+  "mindestbudget": 20,
+  "mindestbudget_regel": "OFFEN",
+  "mindestbudget_hinweis": "Aktive Adsets nie unter diesem Tagesbudget; eine begründete Kürzung darunter wird zur Pause. Wert und Regel-ID vom Entscheider bestätigen lassen.",
+
+  "zielwerte": {
+    "ziel_roas": null,
+    "ziel_roas_hinweis": "null = OFFEN. Quelle im Profil README.md nennen.",
+    "break_even": {"Produkt A": null},
+    "break_even_hinweis": "Je Produkt; null = OFFEN."
+  },
+
+  "konten": {
+    "haupt": {"id": "100000000000001", "label": "Hauptkonto", "meta_name": "Beispielkonto", "prefix": "A"}
+  },
+  "konten_hinweis": "Schlüssel = Kurzname in Dateinamen; id = Meta-Konto-ID ohne act_; prefix = eindeutiger Buchstabe der Adset-Codes im Bericht (A01, B01 …). Schlüssel müssen zu testdaten/testdaten.json passen.",
+
+  "separat": {"kampagnen": {}, "adsets": {}},
+  "separat_hinweis": "Keine Verkaufs-Adsets (z. B. Follower): nicht im Plan, keine Mindestbudget-Prüfung, im Bericht unter „Separat“. Schlüssel = Kampagnen- bzw. Adset-ID, Wert = Anzeigename. Eine Kampagne hier nimmt alle ihre Adsets aus.",
+
+  "triple_whale": {
+    "aktiv": false,
+    "shop_domain": "",
+    "modell": "Triple Attribution",
+    "fenster": "lifetime",
+    "kanal": "facebook-ads",
+    "waehrung": "EUR"
+  },
+  "triple_whale_hinweis": "aktiv=false: ohne Triple Whale arbeiten (nur Meta). Modell und Fenster beim ersten echten Lauf bestätigen."
+}
