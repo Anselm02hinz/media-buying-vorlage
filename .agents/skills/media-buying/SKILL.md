@@ -48,6 +48,7 @@ Ist `MEDIA_BUYING_MODUS=test` gesetzt, ist das ein Testlauf: Die Abrufskripte le
 - Null-Spend bei erreichtem Kontolimit oder Zahlungsausfall ist kein Performance-Signal.
 - Ein hoher Spend-Anteil junger Tests drückt den Konto-ROAS; Bestand und Tests getrennt bewerten, nicht pauschal kürzen.
 - Ein Adset-Name sagt nichts über die gerade aktiven Anzeigen; Starttag laut Meta, nicht laut Namen.
+- Zielwerte (`startup.json`, `zielwerte`): Break-even gilt je Produkt, der Ziel-ROAS für alle Produkte oder je Produkt. Je Adset die Werte seines Produkts verwenden und in der Begründung nennen. Das Produkt ergibt sich aus Kampagnen- und Adset-Namen; ist es unklar, nicht raten, sondern OFFEN nennen und nachfragen.
 - Rundenausrichtungen des Entscheiders („diesmal stärker kürzen“, „konservativ“) gelten für diese Runde, nicht dauerhaft.
 
 ## Ablauf

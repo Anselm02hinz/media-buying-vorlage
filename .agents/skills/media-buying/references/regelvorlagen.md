@@ -6,7 +6,7 @@
 
 ## Vorgehen
 
-1. **Zuerst die Zielwerte** aus dem Fragenblock (`references/einrichtung.md`): Break-even je Produkt, Ziel-ROAS, Mindestbudget, Maßstab (Meta oder Triple Whale). Die Vorschläge setzen diese Werte ein. Fehlt ein Wert, steht im Vorschlag OFFEN statt einer Zahl.
+1. **Zuerst die Zielwerte** aus dem Fragenblock (`references/einrichtung.md`): Break-even je Produkt, Ziel-ROAS (für alle Produkte oder je Produkt), Mindestbudget, Maßstab (Meta oder Triple Whale). Die Vorschläge setzen diese Werte ein. Fehlt ein Wert, steht im Vorschlag OFFEN statt einer Zahl. Gibt es Zielwerte je Produkt, die Regel allgemein fassen („über dem Ziel-ROAS seines Produkts“) und die Werte je Produkt im Vorschlag nennen; die Werte selbst stehen nur in `startup.json`.
 2. **Eigene Regeln zuerst:** Hat der Entscheider schon Regeln genannt, diese wörtlich übernehmen und nur die fehlenden Themen mit Vorlagen ergänzen.
 3. **Vorschlagen:** höchstens drei bis vier Vorlagen pro Nachricht, je Regel ein Satz in einfachen Worten mit den eingesetzten Werten und die Frage dazu. Beispiel: „Vorschlag: Wenn ein Adset 3 und 7 Tage über eurem Ziel-ROAS von 2,0 liegt und mindestens 5 Käufe hat, erhöhe ich um bis zu 20 %. Passt das, oder wie machst du es?“
 4. **Antworten wörtlich festhalten.** Bestätigt: Regel. Angepasst: Regel in der Fassung des Entscheiders. Abgelehnt: weglassen. „Weiß nicht“: weglassen oder mit OFFEN-Stelle, wenn der Entscheider das will.

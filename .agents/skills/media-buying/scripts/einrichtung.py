@@ -30,17 +30,19 @@ KERN = ("AGENTS.md", "ANLEITUNG.md", "README.md", ".gitignore", ".env.example",
 SCHRITTE = [
     ("upload", "Upload", "Fehlende Dateien nachladen: versteckte Dateien einblenden und erneut hochladen "
                          "(ANLEITUNG.md, A2 und A3)."),
-    ("meta", "Meta-Zugang", "Meta-Token anlegen, in der Codex-Umgebung als META_ACCESS_TOKEN eintragen und die "
-                            "Umgebung neu veröffentlichen (ANLEITUNG.md, B1 und B3), danach einen neuen Chat starten."),
-    ("internet", "Internetzugang", "In der Codex-Umgebung graph.facebook.com (mit Triple Whale auch "
-                                   "api.triplewhale.com) als erlaubte Domain eintragen und neu veröffentlichen "
-                                   "(ANLEITUNG.md, B3), danach einen neuen Chat starten."),
+    ("meta", "Meta-Zugang", "Meta-Token anlegen, in der Umgebung als META_ACCESS_TOKEN eintragen und speichern "
+                            "(ANLEITUNG.md, B1 und B3; Claude Code: B3a), danach einen neuen Chat starten."),
+    ("internet", "Internetzugang", "graph.facebook.com (mit Triple Whale auch api.triplewhale.com) als erlaubte "
+                                   "Domain eintragen: Codex unter „Additional allowed domains“, dann Republish "
+                                   "(ANLEITUNG.md, B3); Claude Code im Web unter „Network access“ → „Custom“ (B3a). "
+                                   "Danach einen neuen Chat starten."),
     ("konten", "Werbekonten", "Werbekonten aus der Liste auswählen; die KI trägt sie in startup.json ein."),
     ("angaben", "Angaben zum Startup", "Fragen zum Startup beantworten (Fragenblock in references/einrichtung.md)."),
     ("regeln", "Media-Buying-Regeln", "Startregeln festlegen: Die KI schlägt sie vor (references/regelvorlagen.md), "
                                       "der Entscheider bestätigt oder passt an."),
-    ("triple_whale", "Triple Whale", "Triple-Whale-Key anlegen, als TRIPLEWHALE_API_KEY eintragen und die Umgebung "
-                                     "neu veröffentlichen (ANLEITUNG.md, B2 und B3), danach einen neuen Chat starten."),
+    ("triple_whale", "Triple Whale", "Triple-Whale-Key anlegen, in der Umgebung als TRIPLEWHALE_API_KEY eintragen und "
+                                     "speichern (ANLEITUNG.md, B2 und B3; Claude Code: B3a), danach einen neuen Chat "
+                                     "starten."),
     ("testdaten", "Testdaten", "Testdaten-Schlüssel an die Konten anpassen (macht die KI)."),
     ("bestaetigung", "Bestätigung", "Alle Werte vom Entscheider bestätigen lassen, dann \"beispiel\": false setzen; "
                                     "danach PR erstellen und mergen (ANLEITUNG.md, B4)."),
@@ -71,14 +73,7 @@ def pruefe_stammdaten(startup, ordnername):
     for key, acc in startup.get("konten", {}).items():
         if str(acc.get("id")) == PLATZHALTER_KONTO:
             out.append(befund("FEHLT", "konten", f"Konto {key!r}: noch die Beispiel-ID"))
-    z = startup.get("zielwerte") or {}
-    be = z.get("break_even") or {}
-    if PLATZHALTER_PRODUKT in be:
-        out.append(befund("FEHLT", "angaben", "Break-even: Produkte sind noch Beispielwerte"))
-    out += [befund("OFFEN", "angaben", f"Break-even {k}: OFFEN") for k, v in be.items()
-            if v is None and k != PLATZHALTER_PRODUKT]
-    if z.get("ziel_roas") is None:
-        out.append(befund("OFFEN", "angaben", "Ziel-ROAS: OFFEN"))
+    out += pruefe_zielwerte(startup.get("zielwerte") or {})
     if startup.get("mindestbudget_regel") in (None, "", "OFFEN"):
         out.append(befund("OFFEN", "angaben", f"Mindestbudget {startup.get('mindestbudget')}: ohne Regel-ID (OFFEN)"))
     tw = startup.get("triple_whale") or {}
@@ -91,6 +86,39 @@ def pruefe_stammdaten(startup, ordnername):
                                                    "nur Testläufe möglich"))
     if not any(b["status"] == "FEHLT" for b in out):
         out.insert(0, befund("OK", "angaben", "Stammdaten vollständig"))
+    return out
+
+
+def ist_zahl(v):
+    return isinstance(v, (int, float)) and not isinstance(v, bool)
+
+
+def pruefe_zielwerte(z):
+    """Break-even je Produkt; Ziel-ROAS als eine Zahl für alle Produkte oder je Produkt mit denselben Produktnamen
+    ({"Produkt A": 2.2}). Ein Ziel-ROAS unter dem Break-even eines Produkts ist vermutlich ein Versehen."""
+    out, be, ziel = [], z.get("break_even") or {}, z.get("ziel_roas")
+    je_produkt = ziel if isinstance(ziel, dict) else None
+    produkte = [p for p in dict.fromkeys([*be, *(je_produkt or {})]) if p != PLATZHALTER_PRODUKT]
+    for name, werte in (("Break-even", be), ("Ziel-ROAS", je_produkt)):
+        if werte is None:
+            continue
+        if PLATZHALTER_PRODUKT in werte:
+            out.append(befund("FEHLT", "angaben", f"{name}: Produkte sind noch Beispielwerte"))
+        for p in produkte:
+            if werte.get(p) is None:
+                out.append(befund("OFFEN", "angaben", f"{name} {p}: OFFEN"))
+            elif not ist_zahl(werte[p]):
+                out.append(befund("FEHLT", "angaben", f"{name} {p}: {werte[p]!r} ist keine Zahl"))
+    if je_produkt is None and ziel is None:
+        out.append(befund("OFFEN", "angaben", "Ziel-ROAS: OFFEN"))
+    elif je_produkt is None and not ist_zahl(ziel):
+        out.append(befund("FEHLT", "angaben", f"Ziel-ROAS: {ziel!r} ist weder eine Zahl noch eine Angabe je Produkt"))
+    for p in produkte:
+        ziel_p = je_produkt.get(p) if je_produkt is not None else ziel
+        if ist_zahl(ziel_p) and ist_zahl(be.get(p)) and ziel_p < be[p]:
+            tipp = "" if je_produkt is not None else "; ggf. Ziel-ROAS je Produkt festlegen"
+            out.append(befund("HINWEIS", "angaben", f"{p}: Ziel-ROAS {ziel_p:g} liegt unter Break-even {be[p]:g}"
+                                                    f"{tipp}"))
     return out
 
 

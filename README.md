@@ -46,6 +46,7 @@ Einzelheiten: [SKILL.md](.agents/skills/media-buying/SKILL.md). Dokumentation (P
 
 - Neues Startup: [ANLEITUNG.md](ANLEITUNG.md) (Schritt für Schritt für den Media Buyer; danach führt Codex durch die Einrichtung nach [einrichtung.md](.agents/skills/media-buying/references/einrichtung.md)). Stand prüfen: `python .agents/skills/media-buying/scripts/einrichtung.py`.
 - Zugänge: `.env.example` nach `.env` kopieren (wird nicht versioniert) oder dieselben Namen als Umgebungsvariablen setzen. Schreibzugriff auf Meta bleibt aus, bis Entscheider oder Systemverantwortlicher ihn freischalten.
+- Internet: Die Umgebung muss `graph.facebook.com` und, mit Triple Whale, `api.triplewhale.com` erreichen. Codex: [ANLEITUNG.md](ANLEITUNG.md) B3; Claude Code: B3a.
 - Testlauf ohne Zugänge: `MEDIA_BUYING_MODUS=test` (erfundene Daten aus `<startup>/testdaten/`, Ergebnisse nur in `<startup>/testdaten/testlaeufe/`).
 - Tests: `python -m unittest discover .agents/skills/media-buying/tests` (Python ≥ 3.9, keine Pakete; unter Windows zusätzlich `tzdata`, z. B. `uv run --no-project --with tzdata python -m unittest discover .agents/skills/media-buying/tests`).
 - Änderungen am Kern: [CHANGELOG.md](.agents/skills/media-buying/docs/CHANGELOG.md) · Änderungen des Startups: `<startup>/docs/CHANGELOG.md` · offene Punkte: `<startup>/docs/TODO.md`.

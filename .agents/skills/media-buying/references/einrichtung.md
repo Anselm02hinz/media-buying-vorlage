@@ -11,8 +11,9 @@ Ablauf für die KI, wenn ein neues Startup den Skill einrichtet. Die Klickwege f
 - **Stand prüfen, nicht erinnern:** Jeder Einrichtungs-Chat beginnt mit `python3 .agents/skills/media-buying/scripts/einrichtung.py` (unter Windows siehe `CLAUDE.md`). Es zeigt, was fertig ist, was fehlt und den **nächsten Schritt**. Danach richten.
 - **Für Anfänger:** ein Schritt pro Nachricht, kurze Sätze, keine Fachbegriffe ohne Erklärung, Button-Namen wie in `ANLEITUNG.md` Teil B. Auf „erledigt“ oder eine Frage warten. Nach jedem Schritt kurz bestätigen, was jetzt geht.
 - **Klickwege nicht erfinden:** aus `ANLEITUNG.md` Teil B übernehmen. Weicht die Oberfläche ab, den Media Buyer beschreiben lassen, was er sieht.
-- **Zugangsdaten nie im Chat:** Token und Keys gehören nur in die Codex-Umgebung unter „Environment variables“ (B3), nicht unter „HTTP secrets“ (die Skripte brauchen den Wert selbst). Nie danach fragen, nie ausgeben, nie in Dateien schreiben. Fügt jemand einen Token in den Chat ein: nicht verwenden, nicht speichern, darauf hinweisen, ihn in Meta neu zu erzeugen und nur in der Umgebung einzutragen.
-- **Geänderte Umgebung gilt erst nach „Republish“ und in einem neuen Chat.** Nach B3 immer: „Starte einen neuen Chat mit: Weiter mit der Einrichtung.“
+- **Zugangsdaten nie im Chat:** Token und Keys gehören nur in die Umgebung unter „Environment variables“ (Codex B3, nicht unter „HTTP secrets“; Claude Code im Web B3a, nicht unter „Network secrets“; lokal `.env`), weil die Skripte den Wert selbst brauchen. Nie danach fragen, nie ausgeben, nie in Dateien schreiben. Fügt jemand einen Token in den Chat ein: nicht verwenden, nicht speichern, darauf hinweisen, ihn in Meta neu zu erzeugen und nur in der Umgebung einzutragen.
+- **Internetzugang:** Die Umgebung muss `graph.facebook.com` und, mit Triple Whale, `api.triplewhale.com` erreichen. Codex: „Additional allowed domains“ (B3). Claude Code im Web: „Network access“ → „Custom“, „Allowed domains“ (B3a); die Standardstufe „Trusted“ sperrt beide. Claude Code lokal: nur bei eingeschalteter Sandbox nötig (B3a). Die Einstellung trägt der Media Buyer ein, nicht die KI.
+- **Geänderte Umgebung gilt erst nach „Republish“ (Codex) bzw. „Save changes“ (Claude Code) und in einem neuen Chat.** Nach B3 bzw. B3a immer: „Starte einen neuen Chat mit: Weiter mit der Einrichtung.“
 - **Bestätigen lässt der Entscheider:** `startup.json`, Profil `README.md` und Regeln sind Entscheidungsgrundlagen (`AGENTS.md`). Ist die Person im Chat nicht der Entscheider, braucht es dessen Ja.
 
 ## Was die KI allein macht
@@ -38,19 +39,19 @@ Codex richtet die Umgebung in einem eigenen Gespräch ein. Dort nur sicherstelle
 4. Fragen: „Hast du Admin-Zugang zum Meta Business Manager eurer Werbekonten?“ Wenn nein: Wer hat ihn? Diese Person macht B1.
 5. **Meta-Token** nach `ANLEITUNG.md` B1, Schritt für Schritt. Am Ende hat der Media Buyer den Token kopiert, aber nicht in den Chat eingefügt. Ablauf „Nie“; dafür eine Kalender-Erinnerung in 6 Monaten zum Erneuern empfehlen (B6). Das Erstellungsdatum merkt sich der Media Buyer für Chat 2.
 6. Fragen: „Nutzt ihr Triple Whale?“ Wenn ja: **Triple-Whale-Key** nach B2.
-7. **Codex-Umgebung** nach B3: unter „Environment variables“ `META_ACCESS_TOKEN` (ggf. `TRIPLEWHALE_API_KEY`, `TRIPLEWHALE_SHOP_DOMAIN`), unter „Additional allowed domains“ `graph.facebook.com` (ggf. `api.triplewhale.com`), dann „Republish“. `META_WRITE_ENABLED` nicht anlegen.
+7. **Codex-Umgebung** nach B3: unter „Environment variables“ `META_ACCESS_TOKEN` (ggf. `TRIPLEWHALE_API_KEY`, `TRIPLEWHALE_SHOP_DOMAIN`), unter „Additional allowed domains“ `graph.facebook.com` (ggf. `api.triplewhale.com`), dann „Republish“. `META_WRITE_ENABLED` nicht anlegen. In Claude Code stattdessen nach B3a: im Web „Environment variables“ und „Network access“ → „Custom“ mit denselben Domains, dann „Save changes“; lokal `.env` und, nur mit Sandbox, die Domains erlauben.
 8. „Starte jetzt einen neuen Chat mit: **Weiter mit der Einrichtung**.“
 
 ### Chat 2 · Einrichten (mit Zugängen)
 
-1. `einrichtung.py`. Bei FEHLT in Meta-Zugang oder Internetzugang: zurück zu B1 bzw. B3.
+1. `einrichtung.py`. Bei FEHLT in Meta-Zugang oder Internetzugang: zurück zu B1 bzw. B3 (Claude Code: B3a).
 2. **Konten:** die Liste der Werbekonten zeigen und fragen, welche zum Auftrag gehören. Je Konto: Kurzname (Kleinbuchstaben, z. B. `haupt`), Anzeigename, Meta-Name, Präfix (A, B, …). Währung und Zeitzone aus Meta.
 3. **Kampagnen:** `einrichtung.py --kampagnen`. Die Vorschläge für `separat` zeigen und bestätigen lassen.
 4. **Fragenblock** in einer Nachricht, nummeriert; jede Antwort darf „weiß ich nicht“ sein (dann OFFEN, nichts schätzen):
    1. Wie heißt euer Startup?
    2. Wer entscheidet über die Budgets (Entscheider)? Wer betreut das System technisch (Systemverantwortlicher)? Das darf dieselbe Person sein.
    3. Welche Produkte bewerbt ihr? Ab welchem ROAS ist jedes Produkt profitabel (Break-even)?
-   4. Welchen ROAS strebt ihr an (Ziel-ROAS)?
+   4. Welchen ROAS strebt ihr an (Ziel-ROAS)? Einen für alle Produkte oder je Produkt? Je Produkt lohnt sich, wenn die Break-even-Werte deutlich auseinanderliegen.
    5. Welches Tagesbudget soll ein aktives Adset mindestens haben?
    6. Ist Meta euer Hauptmaßstab, und welche Attribution nutzt ihr (z. B. 7 Tage Klick, 1 Tag View)?
    7. Nur mit Triple Whale: Shop-Domain, Attributionsmodell und Fenster (Standard: Triple Attribution, lifetime).
@@ -80,7 +81,7 @@ Meldet jemand einen erneuerten Token (`ANLEITUNG.md`, B6) oder zeigt die Übersi
 | `name`, `entscheider`, `systemverantwortlich` | Name des Startups und die beiden Rollen (Namen stehen nur hier) |
 | `zeitzone`, `waehrung`, `waehrungszeichen` | wie in den Meta-Konten, z. B. `Europe/Berlin`, `EUR`, `€` |
 | `mindestbudget`, `mindestbudget_regel` | Untergrenze aktiver Adsets und die Regel-ID dazu (ohne Regel: `OFFEN`) |
-| `zielwerte` | `ziel_roas` und `break_even` je Produkt; `null` = OFFEN |
+| `zielwerte` | `break_even` je Produkt; `ziel_roas` als eine Zahl für alle Produkte oder je Produkt mit denselben Produktnamen wie `break_even`; `null` = OFFEN |
 | `konten` | je Konto: Schlüssel (Kurzname), `id` ohne `act_`, `label`, `meta_name`, eindeutiger `prefix` |
 | `meta_token` | `erstellt` (Datum, nie der Token) und `erneuern_nach_tagen` (180); der Skill erinnert 14 Tage vorher |
 | `separat` | Kampagnen oder Adsets ohne Verkaufsziel (z. B. Follower); sie bleiben aus Plan und Mindestbudget-Prüfung |

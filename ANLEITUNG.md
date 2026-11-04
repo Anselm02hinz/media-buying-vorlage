@@ -2,7 +2,7 @@
 
 ## Was ist das?
 
-Der Skill macht jeden Tag Budgetvorschläge für eure Meta-Adsets: erhöhen, senken, pausieren oder halten, jeweils mit Begründung und Zahlen. Er läuft in **Codex** (ChatGPT) und liest eure Werbedaten nur. **Er ändert nichts an euren Konten:** Du entscheidest, gibst frei und setzt im Ads Manager selbst um.
+Der Skill macht jeden Tag Budgetvorschläge für eure Meta-Adsets: erhöhen, senken, pausieren oder halten, jeweils mit Begründung und Zahlen. Er läuft in **Codex** (ChatGPT) oder **Claude Code** (B3a) und liest eure Werbedaten nur. **Er ändert nichts an euren Konten:** Du entscheidest, gibst frei und setzt im Ads Manager selbst um.
 
 > **Wichtig: Der Skill arbeitet nach euren eigenen Media-Buying-Regeln.** Ohne Regeln hat er keine Entscheidungsgrundlage und schlägt im Zweifel nur „Halten“ vor. Bei der Einrichtung schlägt Codex dir deshalb Startregeln vor, zum Beispiel ab wann ein Adset erhöht, gesenkt oder pausiert wird. Du bestätigst sie oder passt sie an. Ändern kannst du sie später jederzeit.
 
@@ -27,7 +27,9 @@ Du brauchst keine Programmierkenntnisse. Ab Teil A, Schritt 5 führt dich Codex 
 - [ ] **Die ZIP-Datei** mit dem Skill, die du per Mail bekommen hast.
 - [ ] **Admin-Zugang zum Meta Business-Portfolio** (Business Manager), dem eure Werbekonten gehören, oder eine Person mit diesem Zugang, die dir kurz hilft.
 - [ ] Nur wenn ihr Triple Whale nutzt: Zugang als **Owner oder Admin**.
-- [ ] **Kurz überlegen** (Codex fragt danach und macht Vorschläge): Ab welchem ROAS ist euer Produkt profitabel (Break-even)? Welchen ROAS strebt ihr an? Wann erhöhst, senkst oder pausierst du ein Adset heute?
+- [ ] **Kurz überlegen** (Codex fragt danach und macht Vorschläge): Ab welchem ROAS ist euer Produkt profitabel (Break-even)? Welchen ROAS strebt ihr an (für alle Produkte gleich oder je Produkt)? Wann erhöhst, senkst oder pausierst du ein Adset heute?
+
+> **Internetzugang:** Der Skill ruft `graph.facebook.com` (Meta) und, nur mit Triple Whale, `api.triplewhale.com` auf. In der Codex-Umgebung und in Claude Code im Web sind diese Domains gesperrt, bis du sie erlaubst: Codex B3, Schritt 3; Claude Code B3a. Fehlen sie, meldet der Skill „nicht erreichbar“.
 
 ### A2 · ZIP entpacken und versteckte Dateien sichtbar machen
 
@@ -123,6 +125,26 @@ Der Key hängt an deinem Triple-Whale-Nutzer. Wirst du aus dem Shop entfernt, fu
 4. **Republish** klicken.
 5. Einen **neuen Chat** starten (Work in: Cloud, deine Umgebung) und schreiben: **„Weiter mit der Einrichtung.“** Neue Werte sieht Codex erst in einem neuen Chat.
 
+### B3a · Claude Code statt Codex: Zugänge und Internet eintragen
+
+Nur wenn ihr den Skill in Claude Code nutzt. Die Bezeichnungen sind die der englischen Oberfläche.
+
+**Claude Code im Web** ([claude.ai/code](https://claude.ai/code))
+
+1. Unter dem Eingabefeld die Umgebung anklicken. Unter **Cloud** mit der Maus auf deine Umgebung zeigen und rechts auf das Einstellungssymbol klicken. Es öffnet sich **Edit cloud environment**.
+2. **Environment variables:** je Zeile `NAME=Wert` eintragen: `META_ACCESS_TOKEN=…` (Token aus B1), nur mit Triple Whale auch `TRIPLEWHALE_API_KEY=…` (B2) und `TRIPLEWHALE_SHOP_DOMAIN=…`. Nicht unter „Network secrets“ eintragen (die Skripte brauchen den Wert selbst). `META_WRITE_ENABLED` nicht anlegen. Wer die Umgebung nutzt, kann diese Werte lesen; die Umgebung deshalb nicht mit anderen teilen.
+3. **Network access:** **Custom** wählen. Unter **Allowed domains** je Zeile eine Domain eintragen: `graph.facebook.com` und, nur mit Triple Whale, `api.triplewhale.com`. Das Häkchen bei **Also include default list of common package managers** setzen. Die Standardstufe **Trusted** reicht nicht, sie enthält weder Meta noch Triple Whale; **Full** ist nicht nötig.
+4. **Save changes**, dann eine **neue Sitzung** starten und schreiben: **„Weiter mit der Einrichtung.“** Neue Zugangsdaten sieht Claude erst in einer neuen Sitzung.
+
+**Claude Code auf dem eigenen Rechner** (Terminal, VS Code, Desktop-App)
+
+- **Zugänge:** im Repository-Ordner `.env.example` nach `.env` kopieren und die Werte eintragen. `.env` wird nicht hochgeladen.
+- **Internet:** ohne Sandbox frei, nichts zu tun. Ist die Sandbox eingeschaltet (`/sandbox`), die Domains in `~/.claude/settings.json` erlauben (unter Windows gibt es die Sandbox nur mit WSL):
+
+  ```json
+  {"sandbox": {"network": {"allowedDomains": ["graph.facebook.com", "api.triplewhale.com"]}}}
+  ```
+
 ### B4 · Änderungen sichern: Pull Request erstellen und mergen
 
 Codex arbeitet in einer Kopie. Was es ändert (Einrichtung, Akten, Berichte), kommt erst in dein Repository, wenn du es übernimmst. **Sonst ist es im nächsten Chat weg.** Darum am Ende jeder Sitzung:
@@ -142,7 +164,7 @@ Codex fasst die wichtigsten Zahlen im Chat zusammen. Den ganzen Bericht öffnest
 
 1. Den alten Token widerrufen: in den Business-Einstellungen beim Systemnutzer **Token widerrufen** (Revoke tokens). Das **vor** dem neuen Token tun, damit nicht versehentlich der neue widerrufen wird.
 2. Einen neuen Token erzeugen: B1, Schritte 10–13.
-3. In der Codex-Umgebung bei `META_ACCESS_TOKEN` den neuen Wert eintragen und **Republish** klicken (B3).
+3. In der Codex-Umgebung bei `META_ACCESS_TOKEN` den neuen Wert eintragen und **Republish** klicken (B3; Claude Code: B3a, Schritt 2).
 4. Neuer Chat: **„Ich habe den Meta-Token heute erneuert.“** Codex prüft den Zugang und trägt das Datum für die nächste Erinnerung ein. Danach sichern (B4).
 
 ---
@@ -176,7 +198,7 @@ Zwischendurch geht auch: „Wie laufen die Adsets?“ oder „Was soll ich kürz
 | „Upload unvollständig“, `.agents` oder `.gitignore` fehlt | Versteckte Dateien einblenden (A2) und nachladen (A3, Schritt 6), dann neuer Chat |
 | Codex kennt den Skill nicht | Liegt `AGENTS.md` direkt auf der Startseite des Repositorys? Sonst A3, Schritt 6 |
 | „META_ACCESS_TOKEN fehlt“ | B3, dann neuer Chat |
-| „graph.facebook.com nicht erreichbar“ | B3, Schritt 3 und **Republish**, dann neuer Chat |
+| „graph.facebook.com nicht erreichbar“ oder „api.triplewhale.com nicht erreichbar“ | Domain in der Umgebung erlauben: Codex B3, Schritt 3 und **Republish**; Claude Code B3a. Dann neuer Chat |
 | „Meta-Token ungültig oder abgelaufen“ | B1, Schritte 10–13, dann B3 |
 | „Konto … nicht freigegeben“ oder „Berechtigungsfehler“ | B1, Schritt 9: Werbekonto dem Systemnutzer zuweisen |
 | „Meta drosselt das Werbekonto“ | Nichts tun; das Skript wartet etwa 5 Minuten und versucht es erneut |

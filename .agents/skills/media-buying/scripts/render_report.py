@@ -176,12 +176,16 @@ def money(v, digits=0):
 
 
 def targets_text():
-    """Zielwerte aus startup.json als Satz, z. B. „Meta-Ziel <ziel_roas>; Break-even Produkt A <wert>, Produkt B offen.“"""
+    """Zielwerte aus startup.json als Satz, z. B. „Meta-Ziel <ziel_roas>; Break-even Produkt A <wert>, Produkt B offen.“
+    Ziel-ROAS ist eine Zahl für alle Produkte oder wie Break-even je Produkt: „Meta-Ziel Produkt A <wert>, …; …“."""
     z = STARTUP.get("zielwerte") or {}
-    goal = f"Meta-Ziel {num(z['ziel_roas'])}" if z.get("ziel_roas") is not None else "Meta-Ziel offen"
-    be = z.get("break_even") or {}
-    parts = [f"{k} {num(v)}" if v is not None else f"{k} offen" for k, v in be.items()]
-    return f"{goal}; Break-even {', '.join(parts)}." if parts else f"{goal}; Break-even offen."
+
+    def per_product(values):
+        return ", ".join(f"{k} {num(v)}" if v is not None else f"{k} offen" for k, v in values.items()) or "offen"
+
+    goal = z.get("ziel_roas")
+    goal = per_product(goal) if isinstance(goal, dict) else "offen" if goal is None else num(goal)
+    return f"Meta-Ziel {goal}; Break-even {per_product(z.get('break_even') or {})}."
 
 
 def buys(v):

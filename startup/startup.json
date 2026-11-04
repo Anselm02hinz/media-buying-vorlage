@@ -19,7 +19,7 @@
 
   "zielwerte": {
     "ziel_roas": null,
-    "ziel_roas_hinweis": "null = OFFEN. Quelle im Profil README.md nennen.",
+    "ziel_roas_hinweis": "Eine Zahl für alle Produkte (z. B. 2.0) oder je Produkt mit denselben Namen wie break_even (z. B. {\"Produkt A\": 2.2}); null = OFFEN. Quelle im Profil README.md nennen.",
     "break_even": {"Produkt A": null},
     "break_even_hinweis": "Je Produkt; null = OFFEN."
   },

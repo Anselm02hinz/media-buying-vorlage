@@ -226,6 +226,16 @@ class Bericht(unittest.TestCase):
         self.assertEqual(render_report.learnings_text(rows), "Angewendete Learnings: L-01 ×1 · L-03 ×2")
         self.assertEqual(render_report.learnings_text([{"rules": ["MB-0001 v1"]}]), "")
 
+    def test_zielwerte_gesamt_oder_je_produkt(self):
+        with mock.patch.dict(render_report.STARTUP, {"zielwerte": {"ziel_roas": 2.0,
+                                                                   "break_even": {"A": 1.6, "B": None}}}):
+            self.assertEqual(render_report.targets_text(), "Meta-Ziel 2,00; Break-even A 1,60, B offen.")
+        with mock.patch.dict(render_report.STARTUP, {"zielwerte": {"ziel_roas": {"A": 2.2, "B": None},
+                                                                   "break_even": {"A": 1.6, "B": 1.8}}}):
+            self.assertEqual(render_report.targets_text(), "Meta-Ziel A 2,20, B offen; Break-even A 1,60, B 1,80.")
+        with mock.patch.dict(render_report.STARTUP, {"zielwerte": {"ziel_roas": None, "break_even": {}}}):
+            self.assertEqual(render_report.targets_text(), "Meta-Ziel offen; Break-even offen.")
+
 
 class Testmodus(unittest.TestCase):
     def test_testdaten_im_api_format(self):
@@ -456,6 +466,20 @@ class Einrichtung(unittest.TestCase):
         self.assertEqual({b["schritt"] for b in out if b["status"] == "FEHLT"}, {"angaben", "konten", "bestaetigung"})
         self.assertTrue(any(b["status"] == "OFFEN" and "Ziel-ROAS" in b["text"] for b in out))
         self.assertTrue(any(b["status"] == "HINWEIS" and "umbenennen" in b["text"] for b in out))
+
+    def test_ziel_roas_je_produkt(self):
+        texte = lambda out, status: [b["text"] for b in out if b["status"] == status]  # noqa: E731
+        out = einrichtung.pruefe_zielwerte({"ziel_roas": {"Serum": 2.2, "Creme": None},
+                                            "break_even": {"Serum": 1.6, "Creme": 1.8, "Set": 2.0}})
+        self.assertEqual(texte(out, "OFFEN"), ["Ziel-ROAS Creme: OFFEN", "Ziel-ROAS Set: OFFEN"])
+        self.assertEqual(texte(out, "FEHLT") + texte(out, "HINWEIS"), [])
+        out = einrichtung.pruefe_zielwerte({"ziel_roas": 2.0, "break_even": {"Serum": 1.6, "Creme": 2.5}})
+        self.assertEqual(texte(out, "HINWEIS"), ["Creme: Ziel-ROAS 2 liegt unter Break-even 2.5; "
+                                                 "ggf. Ziel-ROAS je Produkt festlegen"])
+        out = einrichtung.pruefe_zielwerte({"ziel_roas": {"Serum": "2,2", "Produkt A": None},
+                                            "break_even": {"Serum": 1.6}})
+        self.assertEqual(texte(out, "FEHLT"), ["Ziel-ROAS: Produkte sind noch Beispielwerte",
+                                               "Ziel-ROAS Serum: '2,2' ist keine Zahl"])
 
     def test_testdaten_ohne_konto(self):
         out = einrichtung.pruefe_testdaten({KONTO: {}, "zweitkonto": {}}, FIXTURE)

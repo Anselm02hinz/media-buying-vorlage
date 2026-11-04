@@ -2,6 +2,25 @@
 
 Änderungen am Kern (Skill, Skripte, Tests, Arbeitsanweisung, Vorlage), neueste oben. Änderungen eines Startups stehen in dessen `<startup>/docs/CHANGELOG.md`. Dieses Repository ist die neutrale Vorlage: Kernänderungen zuerst hier eintragen und dann in die Startup-Repositorys übertragen (Skill-Ordner und Einstiegsdateien im Root ersetzen, nie den Startup-Ordner).
 
+## 1.2 · 2026-11-04 · Erlaubte Domains für Codex und Claude Code
+
+Auftrag: Anselm Hinz. Grund: Die Anleitung nannte die nötigen Domains nur für Codex. In Claude Code im Web sperrt die Standardstufe „Trusted“ Meta und Triple Whale.
+
+- **`ANLEITUNG.md`:** Hinweis in A1 (`graph.facebook.com`, mit Triple Whale `api.triplewhale.com`), neuer Abschnitt B3a für Claude Code (im Web: „Environment variables“, „Network access“ → „Custom“; lokal: `.env`, Domains nur bei eingeschalteter Sandbox), Verweise in B6 und Teil D.
+- **`references/einrichtung.md`**, **`CLAUDE.md`**, **`README.md`:** Internetzugang für beide Umgebungen.
+- **`scripts/einrichtung.py`:** Die nächsten Schritte für Meta-Zugang, Internetzugang und Triple Whale nennen auch Claude Code (B3a).
+- **Übertragen in Startup-Repositorys:** Skill-Ordner und Einstiegsdateien im Root ersetzen.
+
+## 1.1 · 2026-11-04 · Ziel-ROAS je Produkt
+
+Auftrag: Anselm Hinz, nach einem Einrichtungstest. Grund: Break-even ließ sich je Produkt festlegen, der Ziel-ROAS nur für alle Produkte. Beide Werte sind Eingaben des Entscheiders in `startup.json`; Meta und Triple Whale liefern ROAS je Adset, nicht je Produkt.
+
+- **`startup.json`:** `zielwerte.ziel_roas` ist eine Zahl für alle Produkte (wie bisher) oder je Produkt mit denselben Namen wie `break_even` (`{"Produkt A": 2.2}`). Bestehende Startups brauchen keine Anpassung.
+- **`scripts/einrichtung.py`:** prüft beide Formen (`pruefe_zielwerte`): OFFEN je fehlendem Produktwert, FEHLT bei Platzhaltern und Werten, die keine Zahl sind, HINWEIS bei einem Ziel-ROAS unter dem Break-even eines Produkts.
+- **`scripts/render_report.py`:** Der Bericht nennt den Ziel-ROAS je Produkt, wenn er so festgelegt ist (`targets_text`).
+- **Doku:** Fragenblock und Feldtabelle (`references/einrichtung.md`), `references/regelvorlagen.md`, `SKILL.md` (je Adset die Zielwerte seines Produkts), `ANLEITUNG.md`, Vorlage `startup/startup.json` (Hinweis) und `startup/README.md` (Zielwerte). Tests ergänzt.
+- **Übertragen in Startup-Repositorys:** Skill-Ordner und `ANLEITUNG.md` ersetzen. Für Ziel-ROAS je Produkt `ziel_roas` in `startup.json` nach Bestätigung des Entscheiders umstellen und die Quelle im Profil nennen.
+
 ## 1.0 · 2026-11-02 · Erste neutrale Fassung
 
 Erste Fassung der neutralen Vorlage. Auftrag: Systemverantwortlicher.

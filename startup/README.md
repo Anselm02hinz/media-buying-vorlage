@@ -25,7 +25,7 @@ Nur diese Konten gehören zum Auftrag; andere Konten nicht abfragen oder bearbei
 | Größe | Wert in `startup.json` | Geltung / Quelle |
 |---|---|---|
 | Break-even-ROAS je Produkt | `zielwerte.break_even` | OFFEN |
-| Ziel-ROAS | `zielwerte.ziel_roas` | OFFEN |
+| Ziel-ROAS (für alle Produkte oder je Produkt) | `zielwerte.ziel_roas` | OFFEN |
 | Mindestbudget aktiver Adsets | `mindestbudget`, darunter pausieren | OFFEN |
 | Ziel-CPA, Testbudget, Budgetobergrenzen, Skalierungsstaffel, Mindestdaten | OFFEN | keine eigenen Werte setzen |
 
