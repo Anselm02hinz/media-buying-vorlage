@@ -444,6 +444,19 @@ class StartupOrdner(unittest.TestCase):
                 common.find_startup(root)  # mehrere
 
 
+class Zielwerte(unittest.TestCase):
+    """Zielwerte im Bericht: Ziel-ROAS als eine Zahl oder je Produkt."""
+
+    def test_ziel_roas_zahl_und_je_produkt(self):
+        with mock.patch.dict(render_report.STARTUP, {"zielwerte": {"ziel_roas": 2.0, "break_even": {"P1": 1.5}}}):
+            self.assertEqual(render_report.targets_text(), "Meta-Ziel 2,00; Break-even P1 1,50.")
+        with mock.patch.dict(render_report.STARTUP, {"zielwerte": {"ziel_roas": {"P1": 1.8, "P2": None},
+                                                                    "break_even": {"P1": 1.67}}}):
+            self.assertEqual(render_report.targets_text(), "Meta-Ziel P1 1,80, P2 offen; Break-even P1 1,67.")
+        with mock.patch.dict(render_report.STARTUP, {"zielwerte": {"ziel_roas": None}}):
+            self.assertEqual(render_report.targets_text(), "Meta-Ziel offen; Break-even offen.")
+
+
 class Einrichtung(unittest.TestCase):
     """Prüfskript der Einrichtung: erkennt Platzhalter und Lücken, nennt den nächsten Schritt, zeigt nie Zugangsdaten."""
 
@@ -456,6 +469,17 @@ class Einrichtung(unittest.TestCase):
         self.assertEqual({b["schritt"] for b in out if b["status"] == "FEHLT"}, {"angaben", "konten", "bestaetigung"})
         self.assertTrue(any(b["status"] == "OFFEN" and "Ziel-ROAS" in b["text"] for b in out))
         self.assertTrue(any(b["status"] == "HINWEIS" and "umbenennen" in b["text"] for b in out))
+
+    def test_ziel_roas_je_produkt(self):
+        basis = {"beispiel": False, "name": "X", "entscheider": "A", "systemverantwortlich": "A",
+                 "mindestbudget": 20, "mindestbudget_regel": "MB-0001",
+                 "konten": {"haupt": {"id": "1", "prefix": "A"}}, "triple_whale": {"aktiv": False}}
+        voll = dict(basis, zielwerte={"ziel_roas": {"P1": 1.8, "P2": 1.5}, "break_even": {"P1": 1.6, "P2": 1.4}})
+        self.assertFalse([b for b in einrichtung.pruefe_stammdaten(voll, "x") if "Ziel-ROAS" in b["text"]])
+        luecke = dict(basis, zielwerte={"ziel_roas": {"P1": 1.8, "P2": None}, "break_even": {"P1": 1.6}})
+        texte = [b["text"] for b in einrichtung.pruefe_stammdaten(luecke, "x") if b["status"] == "OFFEN"]
+        self.assertIn("Ziel-ROAS P2: OFFEN", texte)
+        self.assertNotIn("Ziel-ROAS P1: OFFEN", texte)
 
     def test_testdaten_ohne_konto(self):
         out = einrichtung.pruefe_testdaten({KONTO: {}, "zweitkonto": {}}, FIXTURE)

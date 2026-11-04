@@ -80,7 +80,7 @@ Meldet jemand einen erneuerten Token (`ANLEITUNG.md`, B6) oder zeigt die Übersi
 | `name`, `entscheider`, `systemverantwortlich` | Name des Startups und die beiden Rollen (Namen stehen nur hier) |
 | `zeitzone`, `waehrung`, `waehrungszeichen` | wie in den Meta-Konten, z. B. `Europe/Berlin`, `EUR`, `€` |
 | `mindestbudget`, `mindestbudget_regel` | Untergrenze aktiver Adsets und die Regel-ID dazu (ohne Regel: `OFFEN`) |
-| `zielwerte` | `ziel_roas` und `break_even` je Produkt; `null` = OFFEN |
+| `zielwerte` | `ziel_roas` (eine Zahl für alle Produkte oder je Produkt ein Wert) und `break_even` je Produkt; `null` = OFFEN |
 | `konten` | je Konto: Schlüssel (Kurzname), `id` ohne `act_`, `label`, `meta_name`, eindeutiger `prefix` |
 | `meta_token` | `erstellt` (Datum, nie der Token) und `erneuern_nach_tagen` (180); der Skill erinnert 14 Tage vorher |
 | `separat` | Kampagnen oder Adsets ohne Verkaufsziel (z. B. Follower); sie bleiben aus Plan und Mindestbudget-Prüfung |

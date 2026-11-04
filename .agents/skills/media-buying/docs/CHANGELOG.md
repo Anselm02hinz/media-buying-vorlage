@@ -2,6 +2,16 @@
 
 Änderungen am Kern (Skill, Skripte, Tests, Arbeitsanweisung, Vorlage), neueste oben. Änderungen eines Startups stehen in dessen `<startup>/docs/CHANGELOG.md`. Dieses Repository ist die neutrale Vorlage: Kernänderungen zuerst hier eintragen und dann in die Startup-Repositorys übertragen (Skill-Ordner und Einstiegsdateien im Root ersetzen, nie den Startup-Ordner).
 
+## 1.1 · 2026-11-04 · Ziel-ROAS je Produkt
+
+Auftrag: Helena (Entscheiderin und Systemverantwortliche, Qubro), in der Einrichtungssitzung am 2026-11-04: „passe es im script an“. Grund: Das Startup hat je Produkt einen eigenen Ziel-ROAS; bisher war nur ein Wert für alle Produkte möglich, ein Wert je Produkt ließ den Bericht abbrechen.
+
+- `startup.json`, `zielwerte.ziel_roas`: eine Zahl (gilt für alle Produkte, wie bisher) **oder** je Produkt ein Wert, z. B. `{"Produkt A": 1.8, "Produkt B": null}`; `null` = OFFEN.
+- `scripts/render_report.py` (`targets_text`): zeigt den Ziel-ROAS je Produkt im Berichtskopf.
+- `scripts/einrichtung.py`: meldet fehlende Ziel-ROAS je Produkt einzeln als OFFEN.
+- `references/einrichtung.md`: Feldtabelle ergänzt. Tests `Zielwerte` und `Einrichtung.test_ziel_roas_je_produkt` neu.
+- Übertragen: Bestehende `startup.json` mit einer Zahl bleiben gültig; nichts anzupassen.
+
 ## 1.0 · 2026-11-02 · Erste neutrale Fassung
 
 Erste Fassung der neutralen Vorlage. Auftrag: Systemverantwortlicher.

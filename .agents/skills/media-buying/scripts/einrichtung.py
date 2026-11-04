@@ -77,7 +77,12 @@ def pruefe_stammdaten(startup, ordnername):
         out.append(befund("FEHLT", "angaben", "Break-even: Produkte sind noch Beispielwerte"))
     out += [befund("OFFEN", "angaben", f"Break-even {k}: OFFEN") for k, v in be.items()
             if v is None and k != PLATZHALTER_PRODUKT]
-    if z.get("ziel_roas") is None:
+    ziel = z.get("ziel_roas")
+    if isinstance(ziel, dict):
+        if not ziel:
+            out.append(befund("OFFEN", "angaben", "Ziel-ROAS: OFFEN"))
+        out += [befund("OFFEN", "angaben", f"Ziel-ROAS {k}: OFFEN") for k, v in ziel.items() if v is None]
+    elif ziel is None:
         out.append(befund("OFFEN", "angaben", "Ziel-ROAS: OFFEN"))
     if startup.get("mindestbudget_regel") in (None, "", "OFFEN"):
         out.append(befund("OFFEN", "angaben", f"Mindestbudget {startup.get('mindestbudget')}: ohne Regel-ID (OFFEN)"))
