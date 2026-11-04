@@ -50,7 +50,8 @@ Der Skill arbeitet wie ein erfahrener Media Buyer, der das Meta-Konto als Dienst
 ## Hinweise zur Analyse
 
 - Volle Tage statt Zwischenstände: Teiltage und Intraday-Werte nicht als Entscheidungsgrundlage fortschreiben; Nachmeldungen beachten.
-- Null-Spend bei erreichtem Kontolimit oder Zahlungsausfall ist kein Performance-Signal.
+- Null-Spend bei erreichtem Kontolimit oder Zahlungsausfall ist kein Performance-Signal. Den Kontozustand und eingeschaltete Adsets ohne Auslieferung zeigt die Übersicht.
+- **Kaufmessung unklar** (Lücke „Käufe werden offenbar nicht gemessen“, ROAS „–“): keine Kürzungen oder Pausen wegen schwacher Zahlen. Halten vorschlagen, den Entscheider bitten, die Messung zu prüfen (Events Manager), und das im Bericht als Kernaussage nennen.
 - Ein hoher Spend-Anteil junger Tests drückt den Konto-ROAS; Bestand und Tests getrennt bewerten, nicht pauschal kürzen.
 - Ein Adset-Name sagt nichts über die gerade aktiven Anzeigen; Starttag laut Meta, nicht laut Namen.
 - Zielwerte (`startup.json`, `zielwerte`): Break-even gilt je Produkt, der Ziel-ROAS für alle Produkte oder je Produkt. Je Adset die Werte seines Produkts verwenden und in der Begründung nennen. Das Produkt ergibt sich aus Kampagnen- und Adset-Namen; ist es unklar, nicht raten, sondern OFFEN nennen und nachfragen.

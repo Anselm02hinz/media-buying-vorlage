@@ -10,17 +10,19 @@ import argparse
 import json
 import os
 import re
+from collections import Counter
 from datetime import datetime
 
-from common import (ACCOUNTS, FIXTURE, META_API_VERSION, ROOT, STARTUP, STARTUP_DIR, TEST_MODE, TW, TZ, ApiError,
-                    http_json, read_json, token_erinnerung)
+from build_dataset import action_value, budget_of, num
+from common import (ACCOUNTS, CURRENCY_SIGN, FIXTURE, KONTO_GESTOPPT, KONTOSTATUS, META_API_VERSION, ROOT, STARTUP,
+                    STARTUP_DIR, TEST_MODE, TW, TZ, ApiError, http_json, read_json, separat_name, token_erinnerung)
 from fetch_meta import graph
 
 PLATZHALTER_NAME = "Vorname Nachname"
 PLATZHALTER_KONTO = "100000000000001"
 PLATZHALTER_PRODUKT = "Produkt A"
 VERKAUFSZIELE = ("OUTCOME_SALES", "CONVERSIONS", "PRODUCT_CATALOG_SALES")
-KONTOSTATUS = {1: "aktiv", 2: "deaktiviert", 3: "Zahlung offen", 7: "in Prüfung", 9: "Kulanzzeit", 101: "geschlossen"}
+AKTIV = json.dumps([{"field": "effective_status", "operator": "IN", "value": ["ACTIVE"]}])
 TW_TEST = "https://api.triplewhale.com/api/v2/users/api-keys/me"
 # Kerndateien; die mit Punkt am Anfang fehlen nach einem Upload leicht, weil sie versteckt sind
 KERN = ("AGENTS.md", "ANLEITUNG.md", "README.md", ".gitignore", ".env.example",
@@ -36,7 +38,16 @@ SCHRITTE = [
                                    "Domain eintragen: Codex unter „Additional allowed domains“, dann Republish "
                                    "(ANLEITUNG.md, B3); Claude Code im Web unter „Network access“ → „Custom“ (B3a). "
                                    "Danach einen neuen Chat starten."),
+    ("werbekonto", "Werbekonto", "Der Token sieht kein Werbekonto. Gibt es schon eines: dem Systemnutzer zuweisen "
+                                 "(ANLEITUNG.md, B1, Schritt 9). Gibt es noch keins: zuerst ein Werbekonto im "
+                                 "Business-Portfolio anlegen, dann B1, Schritt 9. Danach einen neuen Chat starten."),
     ("konten", "Werbekonten", "Werbekonten aus der Liste auswählen; die KI trägt sie in startup.json ein."),
+    ("kampagnen", "Kampagnen", "Der Skill steuert Adsets mit eigenem Tagesbudget. Fehlen sie, zuerst eine "
+                               "Verkaufskampagne mit Adset-Budgets anlegen bzw. die Kampagnen mit der KI durchgehen "
+                               "(einrichtung.py --kampagnen)."),
+    ("messung", "Kaufmessung", "Käufe werden nicht gemessen: Kaufereignis in Meta prüfen (Events Manager, Pixel und "
+                               "Conversions API, meist über die Shop-Anbindung). Ohne gemessene Käufe sind ROAS und "
+                               "Vorschläge wertlos."),
     ("angaben", "Angaben zum Startup", "Fragen zum Startup beantworten (Fragenblock in references/einrichtung.md)."),
     ("mandat", "Mandat", "Ziel des Startups in eigenen Worten festhalten: Die KI fragt danach und schreibt es nach dem "
                          "Ja des Entscheiders in regeln/MANDAT.md (references/mandat.md)."),
@@ -203,17 +214,20 @@ def pruefe_meta(token, version):
     """(Befunde, Konten des Tokens oder None)."""
     try:
         konten = graph("me/adaccounts", token, version, limit=200,
-                       fields="account_id,name,currency,timezone_name,account_status")
+                       fields="account_id,name,currency,timezone_name,account_status,disable_reason,spend_cap,"
+                              "amount_spent")
     except ApiError as e:
         if netzfehler(e):
             return [befund("FEHLT", "internet", "graph.facebook.com nicht erreichbar: Internetzugang fehlt")], None
         if '"code":190' in str(e).replace(" ", ""):
             return [befund("FEHLT", "meta", "Meta-Token ungültig oder abgelaufen; neuen Token erzeugen")], None
         return [befund("FEHLT", "meta", f"Meta-Abruf fehlgeschlagen: {e}")], None
+    out = [befund("OK", "internet", "graph.facebook.com erreichbar")]
     if not konten:
-        return [befund("FEHLT", "meta", "Der Token sieht keine Werbekonten: Konten dem Systemnutzer zuweisen")], []
-    out = [befund("OK", "internet", "graph.facebook.com erreichbar"),
-           befund("OK", "meta", f"Meta-Token gültig, {len(konten)} Werbekonten freigegeben")]
+        return out + [befund("OK", "meta", "Meta-Token gültig"),
+                      befund("FEHLT", "werbekonto", "Der Token sieht keine Werbekonten: noch keines angelegt oder "
+                                                    "nicht dem Systemnutzer zugewiesen")], []
+    out.append(befund("OK", "meta", f"Meta-Token gültig, {len(konten)} Werbekonten freigegeben"))
     try:
         rechte = {p.get("permission") for p in graph("me/permissions", token, version) if p.get("status") == "granted"}
     except ApiError:
@@ -243,11 +257,92 @@ def vergleiche_konten(konten, gesehen, zeitzone, waehrung):
         if a.get("timezone_name") and a["timezone_name"] != zeitzone:
             out.append(befund("FEHLT", "angaben", f"Konto {key!r}: Zeitzone {a['timezone_name']} laut Meta, "
                                                   f"{zeitzone} laut startup.json"))
-        if a.get("account_status") not in (None, 1):
-            out.append(befund("HINWEIS", "konten", f"Konto {key!r}: Status "
-                                                   f"{KONTOSTATUS.get(a['account_status'], a['account_status'])}"))
+        status = a.get("account_status")
+        if status not in (None, 1):
+            out.append(befund("FEHLT" if status in KONTO_GESTOPPT else "HINWEIS", "konten",
+                              f"Konto {key!r}: Status {KONTOSTATUS.get(status, status)} laut Meta"
+                              + ("; das Konto liefert so nicht aus" if status in KONTO_GESTOPPT else "")))
+        limit, ausgegeben = num(a.get("spend_cap")), num(a.get("amount_spent"))
+        if limit and ausgegeben >= 0.9 * limit:
+            out.append(befund("HINWEIS", "konten", f"Konto {key!r}: Ausgabenlimit zu {ausgegeben / limit:.0%} "
+                                                   "genutzt; ist es erreicht, stoppt die Auslieferung"))
     if not out and any(str(a.get("id")) != PLATZHALTER_KONTO for a in konten.values()):
         out.append(befund("OK", "konten", "Konten aus startup.json freigegeben, Währung und Zeitzone passen"))
+    return out
+
+
+def budgetebenen(key, adsets):
+    """Aktive Verkaufs-Adsets eines Kontos nach Budgetebene. Der Skill steuert bisher nur Adset-Tagesbudgets;
+    Kampagnen- und Laufzeitbudgets (z. B. Advantage+) erscheinen nur unter „Separat“."""
+    ebenen, andere = Counter(), {}
+    for a in adsets:
+        camp = a.get("campaign") or {}
+        if separat_name(a.get("id"), camp.get("id")):
+            continue
+        _, ebene = budget_of(a)
+        ebenen[ebene] += 1
+        if ebene != "adset":
+            andere[camp.get("id")] = camp.get("name") or camp.get("id")
+    if not sum(ebenen.values()):
+        return [befund("FEHLT", "kampagnen", f"Konto {key!r}: keine aktiven Verkaufs-Adsets; der Skill hat noch "
+                                             "nichts zu steuern")]
+    namen = ", ".join(str(n) for n in list(andere.values())[:5]) + (" …" if len(andere) > 5 else "")
+    if not ebenen["adset"]:
+        return [befund("FEHLT", "kampagnen", f"Konto {key!r}: nur Kampagnen mit Kampagnen- oder Laufzeitbudget "
+                                             f"(z. B. Advantage+): {namen}. Der Skill steuert bisher nur "
+                                             "Adset-Tagesbudgets")]
+    out = [befund("OK", "kampagnen", f"Konto {key!r}: {ebenen['adset']} aktive Adsets mit Adset-Tagesbudget")]
+    if andere:
+        out.append(befund("HINWEIS", "kampagnen", f"Konto {key!r}: {len(andere)} Kampagnen mit Kampagnen- oder "
+                                                  f"Laufzeitbudget nur unter „Separat“, nicht im Plan: {namen}"))
+    return out
+
+
+def kaufmessung(key, insights, pixel=None):
+    """Käufe der letzten 28 Tage laut Meta. Spend ohne einen einzigen Kauf heißt meist: Das Kaufereignis wird nicht
+    gemessen. `pixel`: Pixel des Kontos (Liste) oder None, wenn nicht abrufbar."""
+    spend = sum(num(r.get("spend")) for r in insights or [])
+    kaeufe = sum(action_value(r.get("actions")) for r in insights or [])
+    if kaeufe:
+        return [befund("OK", "messung", f"Konto {key!r}: {kaeufe:g} Käufe in 28 Tagen gemessen")]
+    if pixel == []:
+        lage = "; kein Pixel mit dem Werbekonto verbunden"
+    elif pixel:
+        zuletzt = max((str(p.get("last_fired_time") or "") for p in pixel), default="")
+        lage = f"; Pixel zuletzt ausgelöst {zuletzt[:10]}" if zuletzt else "; Pixel ohne Auslösung"
+    else:
+        lage = ""
+    if spend:
+        return [befund("FEHLT", "messung", f"Konto {key!r}: {spend:.0f} {CURRENCY_SIGN} Spend in 28 Tagen, aber kein "
+                                           f"Kauf gemessen{lage}")]
+    return [befund("HINWEIS", "messung", f"Konto {key!r}: in 28 Tagen kein Spend; ob Käufe gemessen werden, zeigt "
+                                         f"sich nach dem Start{lage}")]
+
+
+def pruefe_auslieferung(konten, gesehen, token, version):
+    """Je Konto aus startup.json, das der Token sieht: Budgetebene der aktiven Adsets und Kaufmessung."""
+    sichtbar = {str(a.get("account_id") or a.get("id", "").replace("act_", "")) for a in gesehen}
+    out = []
+    for key, acc in konten.items():
+        acc_id = str(acc.get("id"))
+        if acc_id == PLATZHALTER_KONTO or acc_id not in sichtbar:
+            continue
+        try:
+            adsets = graph(f"act_{acc_id}/adsets", token, version, limit=200, filtering=AKTIV,
+                           fields="id,name,daily_budget,lifetime_budget,campaign{id,name,daily_budget,lifetime_budget}")
+            insights = graph(f"act_{acc_id}/insights", token, version, date_preset="last_28d", fields="spend,actions",
+                             use_unified_attribution_setting="true")
+        except ApiError as e:
+            out.append(befund("HINWEIS", "kampagnen", f"Konto {key!r}: Adsets oder Käufe nicht abrufbar ({e})"))
+            continue
+        out += budgetebenen(key, adsets)
+        pixel = None
+        if not sum(action_value(r.get("actions")) for r in insights):
+            try:
+                pixel = graph(f"act_{acc_id}/adspixels", token, version, fields="name,last_fired_time")
+            except ApiError:
+                pixel = None
+        out += kaufmessung(key, insights, pixel)
     return out
 
 
@@ -275,18 +370,28 @@ def naechster_schritt(befunde):
     return None, "Bereit", ("Erster Lauf: „Mach mein Media Buying für heute“. Danach PR erstellen und mergen.")
 
 
+def budget_text(kampagne):
+    """Ebene des Budgets einer Kampagne für die Ausgabe von --kampagnen."""
+    if num(kampagne.get("daily_budget")) > 0:
+        return f"Kampagnenbudget {num(kampagne['daily_budget']) / 100:g} {CURRENCY_SIGN}/Tag (nicht im Plan)"
+    if num(kampagne.get("lifetime_budget")) > 0:
+        return "Laufzeitbudget (nicht im Plan)"
+    return "Adset-Budgets"
+
+
 def kampagnen_ausgeben(ids, token, version):
-    filt = json.dumps([{"field": "effective_status", "operator": "IN", "value": ["ACTIVE"]}])
     for acc_id in ids:
         try:
-            camps = graph(f"act_{acc_id}/campaigns", token, version, limit=200, filtering=filt,
-                          fields="id,name,objective,effective_status,daily_budget")
+            camps = graph(f"act_{acc_id}/campaigns", token, version, limit=200, filtering=AKTIV,
+                          fields="id,name,objective,effective_status,daily_budget,lifetime_budget")
         except ApiError as e:
             print(f"  act_{acc_id}: Kampagnen nicht abrufbar ({e})")
             continue
         print(f"\nAktive Kampagnen act_{acc_id}: {len(camps)}")
+        if not camps:
+            print("  Keine aktiven Kampagnen: Der Skill hat noch nichts zu steuern.")
         for c in camps:
-            print(f"  {c.get('id')} · {c.get('name')} · {c.get('objective')}")
+            print(f"  {c.get('id')} · {c.get('name')} · {c.get('objective')} · {budget_text(c)}")
         for c in vorschlag_separat(camps):
             print(f"  Vorschlag separat (kein Verkaufsziel): {c.get('id')} · {c.get('name')} · {c.get('objective')}")
 
@@ -306,6 +411,7 @@ def main():
         befunde += b
         if gesehen:
             befunde += vergleiche_konten(ACCOUNTS, gesehen, STARTUP["zeitzone"], STARTUP["waehrung"])
+            befunde += pruefe_auslieferung(ACCOUNTS, gesehen, token, version)
     if TW["aktiv"] and env.get("TRIPLEWHALE_API_KEY") and not TEST_MODE:
         befunde += pruefe_tw(env["TRIPLEWHALE_API_KEY"])
     print(f"Einrichtung · {STARTUP.get('name')} · Startup-Ordner {STARTUP_DIR.name}/")

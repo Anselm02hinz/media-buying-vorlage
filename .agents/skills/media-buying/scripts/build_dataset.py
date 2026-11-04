@@ -16,8 +16,9 @@ from datetime import date, datetime, time, timedelta
 
 import akte
 from abgleich import STATUS, abgleichen
-from common import (ACCOUNTS, CURRENCY_SIGN, ROOT, STARTUP, STARTUP_DIR, TW, TZ, in_runden, now_iso, raw_dir, read_json, runde,
-                    separat_name, token_erinnerung, windows, write_json, write_text)
+from common import (ACCOUNTS, CURRENCY_SIGN, KONTO_GESTOPPT, KONTOSTATUS, LIEFERPROBLEME, ROOT, STARTUP, STARTUP_DIR, TW,
+                    TZ, in_runden, now_iso, raw_dir, read_json, runde, separat_name, token_erinnerung, windows,
+                    write_json, write_text)
 
 PURCHASE_TYPES = ("omni_purchase", "purchase", "offsite_conversion.fb_pixel_purchase")
 CHANGE_EVENTS = ("update_ad_set_budget", "update_ad_set_run_status", "update_ad_set_bid_strategy",
@@ -250,6 +251,11 @@ def ereignisse(meta_raw):
 def hinweise(row, run_day, win, events):
     """Nüchterne Hinweise je Adset aus den Daten. Keine Bewertung, keine Schwellen."""
     out, md = [], row.get("meta_taeglich") or {}
+    if row.get("messung_unklar"):
+        out.append("Käufe im Konto nicht gemessen: ROAS nicht berechenbar, keine Kürzung oder Pause wegen schwacher "
+                   "Zahlen")
+    if lieferproblem(row):
+        out.append(f"eingeschaltet, liefert laut Meta nicht aus: {LIEFERPROBLEME[row['effective_status']]}")
     first = row.get("erster_liefertag")
     if row["effective_status"] == "ACTIVE" and not any(v.get("spend") for v in md.values()):
         start = parse_time(row["start_time"]).date() if row.get("start_time") else None
@@ -300,7 +306,7 @@ def _tage(row, data):
             if parts:
                 parts.append(f"{d[8:10]}. 0")
             continue
-        roas = f"{m['revenue'] / m['spend']:.2f}" if m.get("spend") else "–"
+        roas = f"{m['revenue'] / m['spend']:.2f}" if m.get("spend") and not row.get("messung_unklar") else "–"
         tw = f" ({t.get('purchases', 0):g})" if td else ""
         parts.append(f"{d[8:10]}. {m.get('spend', 0):.0f}/{m.get('purchases', 0):g}/{roas}{tw}"
                      + (" heute" if i == 0 else ""))
@@ -328,9 +334,10 @@ def overview(data):
     rows = data["rows"]
     in_a = lambda r: r["effective_status"] == "ACTIVE" and r["budget_ebene"] == "adset" and not r.get("separat")  # noqa: E731
     in_c = lambda r: r["effective_status"] == "ACTIVE" and not in_a(r)  # noqa: E731
-    in_b = lambda r: r["effective_status"] != "ACTIVE" and r.get("bewegung")  # noqa: E731
+    in_b = lambda r: r["effective_status"] != "ACTIVE" and r.get("bewegung") and not lieferproblem(r)  # noqa: E731
     a, b, c = [r for r in rows if in_a(r)], [r for r in rows if in_b(r)], [r for r in rows if in_c(r)]
-    d = len(rows) - len(a) - len(b) - len(c)
+    p = [r for r in rows if lieferproblem(r)]
+    d = len(rows) - len(a) - len(b) - len(c) - len(p)
     k = data.get("kontrolle", {})
     lines = [f"# Übersicht {data['id']}" + (" · TESTLAUF" if data["test"] else ""), "",
              f"Lauftag {data['lauftag']} · Fenster: gestern {data['fenster']['y'][0]}, 3 T ab {data['fenster']['d3'][0]}, "
@@ -342,6 +349,10 @@ def overview(data):
              f"**Kontrolle:** {k.get('aktiv_meta', '?')} aktive Adsets laut Meta = {len(a)} zu entscheiden (A) "
              f"+ {len(c)} mit Kampagnenbudget oder separat (C)."
              + ("" if k.get("aktiv_meta") == len(a) + len(c) else " **ABWEICHUNG – Datenstand prüfen.**"), ""]
+    zustand = [f"{ACCOUNTS[key]['label']} {text}" for key, acc in (data.get("konten") or {}).items()
+               if (text := kontozustand(acc.get("zustand")))]
+    if zustand:
+        lines += ["**Werbekonten:** " + " · ".join(zustand), ""]
     erinnerung = None if data["test"] else token_erinnerung(STARTUP, date.fromisoformat(data["lauftag"]))
     if erinnerung:
         lines += [f"**Erinnerung:** {erinnerung}", ""]
@@ -388,6 +399,15 @@ def overview(data):
             if r.get("hinweise"):
                 lines.append("- Hinweise: " + "; ".join(r["hinweise"]))
             lines.append("")
+    if p:
+        lines += [f"## Eingeschaltet, aber ohne Auslieferung laut Meta · {len(p)}", "",
+                  "Nicht im Plan. Ursache im Ads Manager klären lassen (Zahlungsdaten, Ablehnung, Prüfung); kein "
+                  "Leistungssignal.", ""]
+        for r in sorted(p, key=lambda r: (r["konto"], r["name"] or "")):
+            budget = f"{r['budget']:g} {CURRENCY_SIGN}" if r["budget"] is not None else "ohne Tagesbudget"
+            lines.append(f"- {ACCOUNTS[r['konto']]['label'].split(' · ')[0]} · {(r['name'] or '')[:60]} (`{r['id']}`) · "
+                         f"{budget} · {LIEFERPROBLEME[r['effective_status']]}")
+        lines.append("")
     if b:
         lines += [f"## B · Seit gestern pausiert, geändert oder noch mit Spend, jetzt nicht aktiv · {len(b)}", ""]
         for r in sorted(b, key=lambda r: (r["konto"], r["name"] or "")):
@@ -422,12 +442,38 @@ def next_id(run_day):
 
 
 def budget_of(adset):
+    """(Tagesbudget, Ebene). Nur Werte über 0 zählen; Meta liefert teils "0" für nicht genutzte Budgetfelder."""
     camp = adset.get("campaign") or {}
-    if adset.get("daily_budget"):
+    if num(adset.get("daily_budget")) > 0:
         return num(adset["daily_budget"]) / 100, "adset"
-    if camp.get("daily_budget"):
+    if num(camp.get("daily_budget")) > 0:
         return num(camp["daily_budget"]) / 100, "kampagne"
-    return None, "lifetime" if adset.get("lifetime_budget") or camp.get("lifetime_budget") else None
+    lifetime = num(adset.get("lifetime_budget")) > 0 or num(camp.get("lifetime_budget")) > 0
+    return None, "lifetime" if lifetime else None
+
+
+def kontozustand(z):
+    """Kurzer Text zum Werbekonto (Status, Sperrgrund, genutztes Ausgabenlimit); None ohne Angaben (z. B. Testdaten)."""
+    if not z or z.get("status") is None:
+        return None
+    parts = [KONTOSTATUS.get(z["status"], f"Status {z['status']}")]
+    if num(z.get("sperrgrund")):
+        parts.append(f"Sperrgrund laut Meta {z['sperrgrund']}")
+    limit = num(z.get("ausgabenlimit"))
+    if limit:
+        parts.append(f"Ausgabenlimit zu {num(z.get('ausgegeben')) / limit:.0%} genutzt")
+    return ", ".join(parts)
+
+
+def ohne_kaeufe(daily):
+    """Spend eines Kontos ohne einen einzigen Kauf im Abrufzeitraum (Kaufmessung vermutlich defekt), sonst 0."""
+    werte = [v for tage in daily.values() for v in tage.values()]
+    return 0.0 if any(v["purchases"] for v in werte) else sum(v["spend"] for v in werte)
+
+
+def lieferproblem(adset):
+    """Eingeschaltet, liefert laut Meta aber nicht aus (z. B. Zahlungsdaten fehlen, abgelehnt, in Prüfung)."""
+    return str(adset.get("status")).upper() == "ACTIVE" and adset.get("effective_status") in LIEFERPROBLEME
 
 
 def main():
@@ -456,20 +502,41 @@ def main():
     rows, accounts = [], {}
     for key, raw in meta_raw.items():
         gaps += [f"{key}: {g}" for g in raw.get("luecken", [])]
-        tz = (raw.get("account") or {}).get("timezone_name")
+        acc = raw.get("account") or {}
+        tz = acc.get("timezone_name")
         if tz and tz != STARTUP["zeitzone"]:
             gaps.append(f"{key}: Kontozeitzone {tz} statt {STARTUP['zeitzone']}")
         daily = meta_daily(raw["insights"])
         ids = set(daily) | {a["id"] for a in raw["adsets"]}
+        zustand = {"status": acc.get("account_status"), "sperrgrund": acc.get("disable_reason"),
+                   "ausgabenlimit": acc.get("spend_cap"), "ausgegeben": acc.get("amount_spent")}
+        if zustand["status"] in KONTO_GESTOPPT:
+            gaps.append(f"{key}: Werbekonto {kontozustand(zustand)} laut Meta; es liefert so nicht aus. Fehlender "
+                        "Spend ist kein Leistungssignal")
+        limit = num(zustand["ausgabenlimit"])
+        if limit and num(zustand["ausgegeben"]) >= 0.9 * limit:
+            gaps.append(f"{key}: Ausgabenlimit des Kontos zu {num(zustand['ausgegeben']) / limit:.0%} genutzt; ist es "
+                        "erreicht, stoppt die Auslieferung")
+        ausgegeben = ohne_kaeufe(daily)
+        messung_unklar = bool(ausgegeben)
+        if messung_unklar:
+            gaps.append(f"{key}: {ausgegeben:.0f} {CURRENCY_SIGN} Spend im Abrufzeitraum, aber kein Kauf gemessen. "
+                        "Käufe werden offenbar nicht gemessen (Pixel, Conversions API prüfen); ROAS nicht berechenbar. "
+                        "Bis zur Klärung keine Kürzungen oder Pausen wegen schwacher Zahlen")
         accounts[key] = {
             "meta": {w: aggregate(sum_days(daily[i] for i in daily), *rng) for w, rng in win.items()},
             "tw": ({w: aggregate(sum_days(tw[i] for i in ids if i in tw), *rng) for w, rng in win.items()}
                    if tw_raw else None),
             "umfang": "alle Adsets des Kontos mit Auslieferung im Zeitraum, auch inzwischen pausierte",
+            "zustand": zustand, "messung_unklar": messung_unklar,
         }
+        if messung_unklar:
+            for m in accounts[key]["meta"].values():
+                m["roas"] = None
         for a in raw["adsets"]:
             md = daily.get(a["id"], {})
-            if a.get("effective_status") != "ACTIVE" and not any(v["spend"] for v in md.values()):
+            if (a.get("effective_status") != "ACTIVE" and not any(v["spend"] for v in md.values())
+                    and not lieferproblem(a)):
                 continue
             budget, level = budget_of(a)
             spend_days = sorted(d for d, v in md.items() if v["spend"] > 0)
@@ -494,6 +561,10 @@ def main():
                 row["tw"] = {w: aggregate(tw[a["id"]], *rng) for w, rng in row_windows(row, win).items()}
             row["phase"] = phase_text(row)
             row["separat"] = separat_name(a["id"], row["campaign_id"])
+            if messung_unklar:
+                row["messung_unklar"] = True
+                for m in row["meta"].values():
+                    m["roas"] = None
             rows.append(row)
     # Abgleich mit den Plänen, Akten fortschreiben; danach die neuesten Begründungen je Adset lesen
     seit = datetime.combine(win["y"][0], time.min, TZ).isoformat(timespec="minutes")

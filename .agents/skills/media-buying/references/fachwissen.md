@@ -147,7 +147,7 @@ Ein „ernsthafter Versuch“ im Sinne des Mandats ist ein fairer Versuch in die
 
 **Grundsatz:** Ein erreichtes Ausgabenlimit des Kontos oder einer Kampagne, ein von Meta gesetztes Tageslimit, Zahlungsprobleme, Ablehnungen (auch nachträglich bei laufenden Anzeigen) und Fehler bei Pixel oder Conversions API senken Spend oder zugeordnete Käufe, ohne dass das Adset schlechter geworden ist.
 
-**Anwendung:** Vor einer Kürzung wegen eines Einbruchs prüfen: Liefert das Adset? Fallen alle Adsets eines Kontos gleichzeitig, oder fallen nur die Käufe bei normalem Spend und normalem Link-CPC, liegt der Fehler eher bei Konto oder Tracking. Dann nicht kürzen, sondern den Verdacht im Bericht nennen und den Entscheider bitten, Limits, Zahlung, Ablehnungen und Events Manager zu prüfen. Null-Spend ist kein Leistungssignal.
+**Anwendung:** Vor einer Kürzung wegen eines Einbruchs prüfen: Liefert das Adset? Fallen alle Adsets eines Kontos gleichzeitig, oder fallen nur die Käufe bei normalem Spend und normalem Link-CPC, liegt der Fehler eher bei Konto oder Tracking. Dann nicht kürzen, sondern den Verdacht im Bericht nennen und den Entscheider bitten, Limits, Zahlung, Ablehnungen und Events Manager zu prüfen. Null-Spend ist kein Leistungssignal. Misst ein Konto trotz Spend überhaupt keine Käufe (Lücke im Datenstand, ROAS „–“), ist das fast immer ein Messproblem und kein Leistungsurteil: nichts kürzen oder pausieren, bis die Messung geklärt ist. Den Kontozustand und eingeschaltete Adsets ohne Auslieferung zeigt die Übersicht.
 
 *Offiziell Meta · [Ausgabenlimit](https://www.facebook.com/business/help/998181913623584), [Anzeigen pausieren](https://www.facebook.com/business/help/204798856225114), [Anzeigenprüfung](https://www.facebook.com/business/help/236201204528536)*
 
@@ -169,7 +169,7 @@ Orientierung, kein Schema. Ziel und Break-even sind die Werte des Produkts, geme
 
 ## Was der Datenstand nicht zeigt
 
-Lernstatus, Frequenz, CTR, CPM, Ermüdungsstatus, Lieferstatus und Ablehnungen sowie der Neukundenanteil stehen nicht im Datenstand. Ist eines davon für eine Entscheidung wichtig, den Verdacht im Bericht nennen und den Entscheider bitten, im Ads Manager oder in Triple Whale nachzusehen. Nicht raten.
+Lernstatus, Frequenz, CTR, CPM, Ermüdungsstatus, Ablehnungen einzelner Anzeigen und der Neukundenanteil stehen nicht im Datenstand; der Lieferstatus nur, wenn ein eingeschaltetes Adset laut Meta gar nicht ausliefert. Ist eines davon für eine Entscheidung wichtig, den Verdacht im Bericht nennen und den Entscheider bitten, im Ads Manager oder in Triple Whale nachzusehen. Nicht raten.
 
 ## Nicht belegt oder strittig
 

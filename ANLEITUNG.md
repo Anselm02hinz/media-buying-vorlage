@@ -201,6 +201,10 @@ Zwischendurch geht auch: „Wie laufen die Adsets?“ oder „Was soll ich kürz
 | „graph.facebook.com nicht erreichbar“ oder „api.triplewhale.com nicht erreichbar“ | Domain in der Umgebung erlauben: Codex B3, Schritt 3 und **Republish**; Claude Code B3a. Dann neuer Chat |
 | „Meta-Token ungültig oder abgelaufen“ | B1, Schritte 10–13, dann B3 |
 | „Konto … nicht freigegeben“ oder „Berechtigungsfehler“ | B1, Schritt 9: Werbekonto dem Systemnutzer zuweisen |
+| „Der Token sieht keine Werbekonten“ | Gibt es schon ein Werbekonto: B1, Schritt 9. Sonst zuerst ein Werbekonto im Business-Portfolio anlegen, dann B1, Schritt 9 |
+| „nur Kampagnen mit Kampagnen- oder Laufzeitbudget“ oder „keine aktiven Verkaufs-Adsets“ | Der Skill steuert bisher nur Adsets mit eigenem Tagesbudget. Mit Codex besprechen, wie eine Verkaufskampagne mit Adset-Budgets aussehen soll |
+| „Spend …, aber kein Kauf gemessen“ oder „Käufe werden offenbar nicht gemessen“ | Kaufereignis im Events Manager prüfen (Pixel, Conversions API, meist über die Shop-Anbindung). Bis dahin kürzt oder pausiert der Skill nichts wegen schwacher Zahlen |
+| „Status Zahlung offen“, „deaktiviert“ oder „Ausgabenlimit … genutzt“ | Im Ads Manager unter Zahlungen bzw. Kontoeinstellungen klären; solange liefert das Konto nicht oder bald nicht mehr aus |
 | „Meta drosselt das Werbekonto“ | Nichts tun; das Skript wartet etwa 5 Minuten und versucht es erneut |
 | „startup.json enthält noch Beispielwerte“ | Einrichtung nicht abgeschlossen: „Weiter mit der Einrichtung“ |
 | „Noch kein Ziel im Mandat“ | „Weiter mit der Einrichtung“: Codex fragt nach eurem Ziel und schreibt es nach deinem Ja auf |

@@ -44,9 +44,9 @@ Codex richtet die Umgebung in einem eigenen Gespräch ein. Dort nur sicherstelle
 
 ### Chat 2 · Einrichten (mit Zugängen)
 
-1. `einrichtung.py`. Bei FEHLT in Meta-Zugang oder Internetzugang: zurück zu B1 bzw. B3 (Claude Code: B3a).
-2. **Konten:** die Liste der Werbekonten zeigen und fragen, welche zum Auftrag gehören. Je Konto: Kurzname (Kleinbuchstaben, z. B. `haupt`), Anzeigename, Meta-Name, Präfix (A, B, …). Währung und Zeitzone aus Meta.
-3. **Kampagnen:** `einrichtung.py --kampagnen`. Die Vorschläge für `separat` zeigen und bestätigen lassen.
+1. `einrichtung.py`. Bei FEHLT in Meta-Zugang oder Internetzugang: zurück zu B1 bzw. B3 (Claude Code: B3a). Bei FEHLT in **Werbekonto** (Token sieht keins): fragen, ob es schon ein Werbekonto gibt; wenn ja, B1 Schritt 9 (dem Systemnutzer zuweisen), wenn nein, zuerst ein Werbekonto im Business-Portfolio anlegen lassen.
+2. **Konten:** die Liste der Werbekonten zeigen und fragen, welche zum Auftrag gehören. Je Konto: Kurzname (Kleinbuchstaben, z. B. `haupt`), Anzeigename, Meta-Name, Präfix (A, B, …). Währung und Zeitzone aus Meta. Ein Konto mit Status „deaktiviert“, „Zahlung offen“ oder „geschlossen“ liefert nicht aus; das zuerst klären lassen.
+3. **Kampagnen:** `einrichtung.py --kampagnen` zeigt je aktiver Kampagne Ziel und Budgetebene. Die Vorschläge für `separat` zeigen und bestätigen lassen. Der Skill steuert bisher nur **Adsets mit eigenem Tagesbudget**: Gibt es nur Kampagnen mit Kampagnen- oder Laufzeitbudget (z. B. Advantage+) oder gar keine aktiven Kampagnen, das offen sagen; dann hat der Skill noch nichts zu steuern, bis es eine Verkaufskampagne mit Adset-Budgets gibt. Nach dem Schreiben der Konten (Schritt 7) prüft `einrichtung.py` das unter „Kampagnen“ und „Kaufmessung“ selbst: Hat ein Konto in 28 Tagen Spend, aber keinen gemessenen Kauf, ist die Messung (Pixel, Conversions API) zuerst zu klären.
 4. **Fragenblock** in einer Nachricht, nummeriert; jede Antwort darf „weiß ich nicht“ sein (dann OFFEN, nichts schätzen):
    1. Wie heißt euer Startup?
    2. Wer entscheidet über die Budgets (Entscheider)? Wer betreut das System technisch (Systemverantwortlicher)? Das darf dieselbe Person sein.

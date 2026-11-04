@@ -177,6 +177,34 @@ class PhaseUndSeparat(unittest.TestCase):
                          [("neu", None, 88.0), ("budget", 88.0, 44.0)])
         self.assertEqual(evs[1]["werkzeug"], "Power Editor")
 
+    def test_budget_null_zaehlt_nicht(self):
+        self.assertEqual(build_dataset.budget_of({"daily_budget": "0", "campaign": {"daily_budget": "5000"}}),
+                         (50.0, "kampagne"))
+        self.assertEqual(build_dataset.budget_of({"daily_budget": "0", "lifetime_budget": "0", "campaign": {}}),
+                         (None, None))
+
+    def test_kaufmessung_und_lieferprobleme_in_der_uebersicht(self):
+        tag = lambda spend, kaeufe: {"spend": spend, "purchases": kaeufe, "revenue": 0.0, "link_clicks": 0}  # noqa: E731
+        self.assertEqual(build_dataset.ohne_kaeufe({"a": {"d1": tag(40.0, 0)}, "b": {"d1": tag(20.0, 0)}}), 60.0)
+        self.assertEqual(build_dataset.ohne_kaeufe({"a": {"d1": tag(40.0, 1)}, "b": {"d1": tag(20.0, 0)}}), 0.0)
+        ds = dataset({"id": "a", "name": "Aktiv", "budget": 40.0, "phase": "", "meta": {}, "tw": None,
+                      "hinweise": build_dataset.hinweise({"messung_unklar": True, "effective_status": "ACTIVE",
+                                                          "status": "ACTIVE", "budget_ebene": "adset", "budget": 40.0,
+                                                          "meta": {}, "meta_taeglich": {"d1": tag(40.0, 0)}},
+                                                         date(2026, 10, 26), windows(date(2026, 10, 26)), [])},
+                     {"id": "z", "name": "Ohne Zahlung", "budget": 30.0, "effective_status": "PENDING_BILLING_INFO",
+                      "phase": "", "meta": {}, "tw": None, "bewegung": True})
+        ds.update({"id": "D-1", "test": False, "lauftag": "2026-10-26", "luecken": [], "kontrolle": {"aktiv_meta": 1},
+                   "fenster": {"y": ["2026-10-25"] * 2, "d3": ["2026-10-23", "2026-10-25"],
+                               "d7": ["2026-10-19", "2026-10-25"]},
+                   "konten": {KONTO: {"zustand": {"status": 3, "ausgabenlimit": "1000", "ausgegeben": "950"}}}})
+        text = build_dataset.overview(ds)
+        self.assertIn("Zahlung offen, Ausgabenlimit zu 95% genutzt", text)
+        self.assertIn("## Eingeschaltet, aber ohne Auslieferung laut Meta · 1", text)
+        self.assertIn("Ohne Zahlung (`z`) · 30 € · Zahlungsdaten fehlen".replace("€", S), text)
+        self.assertNotIn("## B · ", text)  # Lieferproblem nicht doppelt unter B
+        self.assertIn("Käufe im Konto nicht gemessen", text)
+
     def test_hinweis_budget_passt_nicht_zum_verlauf(self):
         row = {"effective_status": "ACTIVE", "budget_ebene": "adset", "budget": 100.0,
                "updated_time": "2026-10-27T01:09:00+0000", "meta": {}, "meta_taeglich": {"2026-10-27": {"spend": 5}}}
@@ -491,6 +519,39 @@ class Einrichtung(unittest.TestCase):
         out = einrichtung.vergleiche_konten({"a": {"id": "1"}, "b": {"id": "2"}}, gesehen, "Europe/Berlin", "EUR")
         self.assertEqual([(b["status"], b["schritt"]) for b in out], [("FEHLT", "angaben"), ("FEHLT", "konten")])
         self.assertIn("Währung USD", out[0]["text"])
+
+    def test_token_ohne_werbekonten_fuehrt_zum_werbekonto(self):
+        with mock.patch.object(einrichtung, "graph", lambda *a, **k: []):
+            out, konten = einrichtung.pruefe_meta("x", "v")
+        self.assertEqual(konten, [])
+        self.assertEqual(einrichtung.naechster_schritt(out)[1], "Werbekonto")  # nicht zurück zum Token (B1)
+
+    def test_kontostatus_und_ausgabenlimit(self):
+        gesehen = [{"account_id": "1", "currency": "EUR", "timezone_name": "Europe/Berlin", "account_status": 3,
+                    "spend_cap": "100000", "amount_spent": "95000"}]
+        out = einrichtung.vergleiche_konten({"a": {"id": "1"}}, gesehen, "Europe/Berlin", "EUR")
+        self.assertEqual([b["status"] for b in out], ["FEHLT", "HINWEIS"])
+        self.assertIn("Zahlung offen", out[0]["text"])
+        self.assertIn("95%", out[1]["text"])
+
+    def test_budgetebenen(self):
+        abo = {"id": "1", "daily_budget": "4000", "campaign": {"id": "c1", "name": "ABO"}}
+        cbo = {"id": "2", "daily_budget": "0", "campaign": {"id": "c2", "name": "Advantage+", "daily_budget": "9000"}}
+        status = lambda out: [b["status"] for b in out]  # noqa: E731
+        self.assertEqual(status(einrichtung.budgetebenen("k", [])), ["FEHLT"])
+        nur_cbo = einrichtung.budgetebenen("k", [cbo])
+        self.assertEqual(status(nur_cbo), ["FEHLT"])
+        self.assertIn("Advantage+", nur_cbo[0]["text"])
+        self.assertEqual(status(einrichtung.budgetebenen("k", [abo, cbo])), ["OK", "HINWEIS"])
+
+    def test_kaufmessung(self):
+        kauf = [{"spend": "300", "actions": [{"action_type": "omni_purchase", "value": "4"}]}]
+        ohne = [{"spend": "300", "actions": []}]
+        self.assertEqual(einrichtung.kaufmessung("k", kauf)[0]["status"], "OK")
+        out = einrichtung.kaufmessung("k", ohne, pixel=[])
+        self.assertEqual((out[0]["status"], out[0]["schritt"]), ("FEHLT", "messung"))
+        self.assertIn("kein Pixel", out[0]["text"])
+        self.assertEqual(einrichtung.kaufmessung("k", [])[0]["status"], "HINWEIS")  # noch kein Spend
 
     def test_vorschlag_separat(self):
         camps = [{"name": "Verkauf", "objective": "OUTCOME_SALES"}, {"name": "Follower", "objective": "OUTCOME_ENGAGEMENT"}]

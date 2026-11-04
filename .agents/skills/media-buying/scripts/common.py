@@ -70,6 +70,14 @@ SEPARAT = {"kampagnen": {}, "adsets": {}, **(STARTUP.get("separat") or {})}
 def separat_name(adset_id, campaign_id):
     return SEPARAT["adsets"].get(adset_id) or SEPARAT["kampagnen"].get(campaign_id)
 
+
+# Werbekonto laut Meta (`account_status`); bei 2, 3 und 101 liefert das Konto nicht aus.
+KONTOSTATUS = {1: "aktiv", 2: "deaktiviert", 3: "Zahlung offen", 7: "in Prüfung", 9: "Kulanzzeit", 101: "geschlossen"}
+KONTO_GESTOPPT = (2, 3, 101)
+# Adset eingeschaltet (`status` ACTIVE), liefert laut Meta aber nicht aus (`effective_status`)
+LIEFERPROBLEME = {"WITH_ISSUES": "mit Problemen laut Meta", "PENDING_BILLING_INFO": "Zahlungsdaten fehlen",
+                  "DISAPPROVED": "abgelehnt", "PENDING_REVIEW": "in Prüfung", "IN_PROCESS": "wird verarbeitet"}
+
 try:
     TZ = ZoneInfo(STARTUP["zeitzone"])
 except ZoneInfoNotFoundError:

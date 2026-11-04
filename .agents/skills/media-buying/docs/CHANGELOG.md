@@ -2,6 +2,23 @@
 
 Änderungen am Kern (Skill, Skripte, Tests, Arbeitsanweisung, Vorlage), neueste oben. Änderungen eines Startups stehen in dessen `<startup>/docs/CHANGELOG.md`. Dieses Repository ist die neutrale Vorlage: Kernänderungen zuerst hier eintragen und dann in die Startup-Repositorys übertragen (Skill-Ordner und Einstiegsdateien im Root ersetzen, nie den Startup-Ordner).
 
+## 2.1 · 2026-11-04 · Sicherheitsnetz: Voraussetzungen erkennen
+
+Auftrag: Anselm Hinz (Plan „von 0 auf 1“, Baustein 1). Grund: Ohne gemessene Käufe stand der ROAS auf 0,00, und der Skill hätte nach F-08 alles pausiert. Konten nur mit Kampagnenbudgets oder ganz ohne Kampagnen meldeten trotzdem „alles bereit“, und ohne Werbekonto endete die Einrichtung in einer Schleife zurück zum Token.
+
+- **`scripts/einrichtung.py`:**
+  - neue Schritte „Werbekonto“ (Token sieht keins: anlegen oder zuweisen), „Kampagnen“ (Budgetebene der aktiven Adsets, `budgetebenen`) und „Kaufmessung“ (Käufe in 28 Tagen, Pixel `last_fired_time`, `kaufmessung`)
+  - Kontostatus „deaktiviert“, „Zahlung offen“ und „geschlossen“ als FEHLT, fast erreichtes Ausgabenlimit als Hinweis
+  - `--kampagnen` zeigt die Budgetebene je Kampagne
+- **`scripts/build_dataset.py`:**
+  - Kontozustand in der Übersicht (`kontozustand`)
+  - Konto mit Spend, aber ohne einen gemessenen Kauf (`ohne_kaeufe`): Lücke, ROAS `None` („–“) und Hinweis je Adset
+  - eingeschaltete Adsets ohne Auslieferung (`lieferproblem`) in einem eigenen Abschnitt
+  - `budget_of` zählt nur Budgets über 0
+- **`scripts/common.py`:** `KONTOSTATUS`, `KONTO_GESTOPPT`, `LIEFERPROBLEME` gemeinsam für beide Skripte.
+- **Doku:** `SKILL.md` und `references/fachwissen.md` F-15 (bei unklarer Messung nichts kürzen oder pausieren), `references/einrichtung.md` (Chat 2, Schritte 1–3), `references/meta-api.md` (neue Abrufe bei der Einrichtung, UNGEPRÜFT), `ANLEITUNG.md` Teil D. Tests ergänzt.
+- **Übertragen in Startup-Repositorys:** Skill-Ordner und `ANLEITUNG.md` ersetzen; im Startup-Ordner nichts nötig.
+
 ## 2.0 · 2026-11-04 · Mandat und Fachwissen statt Startregeln
 
 Auftrag: Anselm Hinz. Grund: Starre Startregeln („ab ROAS X um 20 % erhöhen“), die sich ein Startup bei der Einrichtung ausdenkt, sind meist willkürlich. Der Skill soll wie ein Media-Buying-Dienstleister arbeiten: Das Startup nennt sein Ziel, der Skill entscheidet je Runde mit Fachwissen und allen Daten, der Entscheider gibt frei oder korrigiert.
