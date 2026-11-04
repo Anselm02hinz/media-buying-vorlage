@@ -1,3 +1,3 @@
-# Änderungsverlauf der Regeln
+# Änderungsverlauf von Mandat und Leitplanken
 
-Jede fachliche Regeländerung mit Datum, Regel-ID und Version, Quelle und bestätigender Person. Neueste oben.
+Jede Änderung an Ziel, Maßstab oder Leitplanken (`regeln/MANDAT.md`) mit Datum, Mandatsversion bzw. Leitplanken-ID und Version, Quelle und bestätigender Person. Alte Fassungen liegen in diesem Ordner. Neueste oben.

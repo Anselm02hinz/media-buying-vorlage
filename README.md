@@ -12,7 +12,7 @@ AGENTS.md  CLAUDE.md  README.md  ANLEITUNG.md  .env.example  .gitignore    Einst
 .agents/skills/media-buying/     KERN – für jedes Startup gleich, als Ganzes übertragbar
 ├── SKILL.md                     Ablauf der Budgetrunde
 ├── scripts/                     Abruf, Datenstand, Bericht, Plan, Einrichtungsprüfung
-├── references/                  liest die KI gezielt: Einrichtung, Meta-API, Triple-Whale-API, Dokumentation und Ablage
+├── references/                  liest die KI: Fachwissen (jede Runde), Mandat, Einrichtung, Meta-API, Triple-Whale-API, Dokumentation und Ablage
 ├── tests/                       Tests ohne Netzwerk
 └── docs/                        für Menschen: CHANGELOG.md des Kerns
 
@@ -21,11 +21,11 @@ AGENTS.md  CLAUDE.md  README.md  ANLEITUNG.md  .env.example  .gitignore    Einst
 ├── README.md                    Profil: Konten, Daten und Attribution, Zielwerte, Befugnisse, Abweichungen
 ├── AKTUELL.md                   Einstieg jeder Sitzung
 ├── LEARNINGS.md                 wie der Entscheider entscheidet
-├── regeln/                      Regeln, Prüfreihenfolge, Regelvorschläge
+├── regeln/                      Mandat (Ziel, Maßstab, Leitplanken), Prüfreihenfolge
 ├── akten/                       Akte je Adset (Gedächtnis des Skills)
 ├── runden/YYYY-MM-DD/           alles einer Runde: Datenstand, Übersicht, Bericht, Plan, Verifikation
 ├── testdaten/                   erfundene Testdaten und Testläufe
-└── docs/                        Nachweise und Verlauf: Quellen, Regelhistorie, TODO, CHANGELOG
+└── docs/                        Nachweise und Verlauf: Quellen, Verlauf von Mandat und Leitplanken, TODO, CHANGELOG
 ```
 
 Faustregel: Was der Skill in einer Runde liest oder schreibt, liegt direkt in `<startup>/` oder in `regeln/`, `akten/`, `runden/`; was nur belegt oder den Verlauf festhält, in `docs/`. Einzelheiten: [dokumentation.md](.agents/skills/media-buying/references/dokumentation.md).

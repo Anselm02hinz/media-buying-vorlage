@@ -4,7 +4,7 @@
 
 Der Skill macht jeden Tag Budgetvorschläge für eure Meta-Adsets: erhöhen, senken, pausieren oder halten, jeweils mit Begründung und Zahlen. Er läuft in **Codex** (ChatGPT) oder **Claude Code** (B3a) und liest eure Werbedaten nur. **Er ändert nichts an euren Konten:** Du entscheidest, gibst frei und setzt im Ads Manager selbst um.
 
-> **Wichtig: Der Skill arbeitet nach euren eigenen Media-Buying-Regeln.** Ohne Regeln hat er keine Entscheidungsgrundlage und schlägt im Zweifel nur „Halten“ vor. Bei der Einrichtung schlägt Codex dir deshalb Startregeln vor, zum Beispiel ab wann ein Adset erhöht, gesenkt oder pausiert wird. Du bestätigst sie oder passt sie an. Ändern kannst du sie später jederzeit.
+> **Wichtig: Der Skill arbeitet wie ein Media-Buying-Dienstleister nach eurem Ziel.** Bei der Einrichtung schreibst du in eigenen Worten auf, was ihr mit den Meta-Ads erreichen wollt, zum Beispiel: „Mit allen Adsets den Ziel-ROAS erreichen. Was nach ernsthaften Versuchen nicht läuft, herunterfahren oder abschalten. Was gut läuft, so weit wie möglich pushen.“ Starre Regeln wie „ab ROAS X um 20 % erhöhen“ brauchst du nicht: Wie das Ziel am besten erreicht wird, entscheidet der Skill in jeder Runde mit Media-Buying-Fachwissen und allen Daten, und er begründet es. Du gibst frei oder korrigierst; aus deinen Korrekturen lernt er deinen Stil. Ändern kannst du das Ziel jederzeit.
 
 So läuft die Einrichtung:
 
@@ -12,7 +12,7 @@ So läuft die Einrichtung:
 |---|---|---|
 | **Teil A** | ZIP entpacken, in GitHub hochladen, Codex verbinden | du, mit dieser Anleitung |
 | **Chat 1** | Meta-Zugang anlegen, in Codex eintragen | du, Codex führt dich |
-| **Chat 2** | Werbekonten wählen, Zielwerte nennen, **eure Media-Buying-Regeln festlegen**, sichern | du, Codex führt dich |
+| **Chat 2** | Werbekonten wählen, Zielwerte nennen, **euer Ziel festhalten**, sichern | du, Codex führt dich |
 
 Du brauchst keine Programmierkenntnisse. Ab Teil A, Schritt 5 führt dich Codex Schritt für Schritt; Teil B brauchst du nur zum Nachlesen.
 
@@ -27,7 +27,7 @@ Du brauchst keine Programmierkenntnisse. Ab Teil A, Schritt 5 führt dich Codex 
 - [ ] **Die ZIP-Datei** mit dem Skill, die du per Mail bekommen hast.
 - [ ] **Admin-Zugang zum Meta Business-Portfolio** (Business Manager), dem eure Werbekonten gehören, oder eine Person mit diesem Zugang, die dir kurz hilft.
 - [ ] Nur wenn ihr Triple Whale nutzt: Zugang als **Owner oder Admin**.
-- [ ] **Kurz überlegen** (Codex fragt danach und macht Vorschläge): Ab welchem ROAS ist euer Produkt profitabel (Break-even)? Welchen ROAS strebt ihr an (für alle Produkte gleich oder je Produkt)? Wann erhöhst, senkst oder pausierst du ein Adset heute?
+- [ ] **Kurz überlegen** (Codex fragt danach): Ab welchem ROAS ist euer Produkt profitabel (Break-even)? Welchen ROAS strebt ihr an (für alle Produkte gleich oder je Produkt)? Was wollt ihr mit euren Meta-Ads erreichen, und was soll mit Adsets passieren, die gut oder schlecht laufen?
 
 > **Internetzugang:** Der Skill ruft `graph.facebook.com` (Meta) und, nur mit Triple Whale, `api.triplewhale.com` auf. In der Codex-Umgebung und in Claude Code im Web sind diese Domains gesperrt, bis du sie erlaubst: Codex B3, Schritt 3; Claude Code B3a. Fehlen sie, meldet der Skill „nicht erreichbar“.
 
@@ -181,7 +181,7 @@ Codex fasst die wichtigsten Zahlen im Chat zusammen. Den ganzen Bericht öffnest
 
 Zwischendurch geht auch: „Wie laufen die Adsets?“ oder „Was soll ich kürzen?“
 
-**Regeln ändern:** einfach schreiben, z. B. „Ändere die Regel zum Erhöhen: künftig höchstens +15 % auf einmal.“ Codex zeigt dir alte und neue Fassung und trägt die neue nach deinem Ja ein; die alte bleibt im Verlauf erhalten.
+**Ziel oder Grenzen ändern:** einfach schreiben, z. B. „Diesen Monat zählt Wachstum mehr als der ROAS.“ oder, als feste Grenze, „Erhöhe nie mehr als 15 % auf einmal.“ Codex zeigt dir alte und neue Fassung und trägt die neue nach deinem Ja ein; die alte bleibt im Verlauf erhalten.
 
 **Wichtig**
 - Der Skill liest nur. Geändert wird nur von dir im Ads Manager.
@@ -203,7 +203,7 @@ Zwischendurch geht auch: „Wie laufen die Adsets?“ oder „Was soll ich kürz
 | „Konto … nicht freigegeben“ oder „Berechtigungsfehler“ | B1, Schritt 9: Werbekonto dem Systemnutzer zuweisen |
 | „Meta drosselt das Werbekonto“ | Nichts tun; das Skript wartet etwa 5 Minuten und versucht es erneut |
 | „startup.json enthält noch Beispielwerte“ | Einrichtung nicht abgeschlossen: „Weiter mit der Einrichtung“ |
-| „Noch keine Media-Buying-Regeln“ | „Weiter mit der Einrichtung“: Codex schlägt Startregeln vor, du bestätigst oder passt an |
+| „Noch kein Ziel im Mandat“ | „Weiter mit der Einrichtung“: Codex fragt nach eurem Ziel und schreibt es nach deinem Ja auf |
 | „Erinnerung: Meta-Token erneuern“ | B6 |
 | Änderungen vom letzten Mal fehlen | Pull Request nicht gemergt: B4 |
 
@@ -211,7 +211,7 @@ Zwischendurch geht auch: „Wie laufen die Adsets?“ oder „Was soll ich kürz
 
 ## Gut zu wissen
 
-- **Was wo liegt:** Der Ordner `startup/` heißt nach der Einrichtung wie euer Startup. Darin liegt alles von euch: Einstellungen, Regeln, Learnings, Akten je Adset und alle Runden. Der Ordner `.agents/` ist der Skill selbst; bitte nicht ändern.
+- **Was wo liegt:** Der Ordner `startup/` heißt nach der Einrichtung wie euer Startup. Darin liegt alles von euch: Einstellungen, euer Ziel (Mandat), Learnings, Akten je Adset und alle Runden. Der Ordner `.agents/` ist der Skill selbst; bitte nicht ändern.
 - **Neue Versionen** des Skills bekommt ihr vom Systemverantwortlichen. Ersetzt werden nur `.agents/` und die Dateien im Hauptordner, nie euer Startup-Ordner.
 - **Schreibzugriff:** Der Skill könnte freigegebene Budgets technisch auch selbst umsetzen. Das ist gesperrt und bleibt es, bis Entscheider oder Systemverantwortlicher es bewusst freischalten.
-- **Platzhalter:** Namen und Zahlen der Vorlage gelten für kein echtes Startup: Beispielwerte in `startup.json` (`"beispiel": true`), OFFEN in Profil und Regeln, die Testdaten sowie Beispielzahlen in Skill, Referenzen und Tests (z. B. Budgets wie 88 €, Regel-IDs wie `MB-0004 v1`, Learning-IDs wie `L-03`). Echte Werte trägt Codex bei der Einrichtung ein, erst nach Bestätigung durch den Entscheider.
+- **Platzhalter:** Namen und Zahlen der Vorlage gelten für kein echtes Startup: Beispielwerte in `startup.json` (`"beispiel": true`), OFFEN in Profil und Regeln, die Testdaten sowie Beispielzahlen in Skill, Referenzen und Tests (z. B. Budgets wie 88 €, Leitplanken-IDs wie `MB-0001 v1`, Fachwissen-IDs wie `F-04`, Learning-IDs wie `L-03`). Echte Werte trägt Codex bei der Einrichtung ein, erst nach Bestätigung durch den Entscheider.

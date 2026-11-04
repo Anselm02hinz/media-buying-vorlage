@@ -4,7 +4,7 @@ Ablauf für die KI, wenn ein neues Startup den Skill einrichtet. Die Klickwege f
 
 **Wann:** `<startup>/startup.json` enthält `"beispiel": true`, oder jemand sagt „Richte den Skill ein“, „Weiter mit der Einrichtung“, „Einrichtung“ oder „Setup“. Fehlt der Ordner `.agents/skills/media-buying/`, ist der Upload unvollständig (siehe `AGENTS.md`).
 
-**Kern der Einrichtung sind die Media-Buying-Regeln des Startups.** Ohne sie hat der Skill keine Entscheidungsgrundlage. Die KI schlägt Startregeln nach [regelvorlagen.md](regelvorlagen.md) vor; der Entscheider bestätigt oder passt an. Das früh im Gespräch ankündigen, damit der Entscheider sich darauf einstellt.
+**Kern der Einrichtung ist das Mandat des Startups:** sein Ziel in eigenen Worten ([mandat.md](mandat.md)). Ohne Ziel hat der Skill keine Entscheidungsgrundlage. Starre Regeln braucht es nicht: Wie das Ziel erreicht wird, entscheidet der Skill je Runde nach Fachwissen ([fachwissen.md](fachwissen.md)), wie ein Media-Buying-Dienstleister; der Entscheider gibt frei oder korrigiert. Das früh im Gespräch ankündigen, damit der Entscheider sich darauf einstellt.
 
 ## Grundsätze
 
@@ -14,7 +14,7 @@ Ablauf für die KI, wenn ein neues Startup den Skill einrichtet. Die Klickwege f
 - **Zugangsdaten nie im Chat:** Token und Keys gehören nur in die Umgebung unter „Environment variables“ (Codex B3, nicht unter „HTTP secrets“; Claude Code im Web B3a, nicht unter „Network secrets“; lokal `.env`), weil die Skripte den Wert selbst brauchen. Nie danach fragen, nie ausgeben, nie in Dateien schreiben. Fügt jemand einen Token in den Chat ein: nicht verwenden, nicht speichern, darauf hinweisen, ihn in Meta neu zu erzeugen und nur in der Umgebung einzutragen.
 - **Internetzugang:** Die Umgebung muss `graph.facebook.com` und, mit Triple Whale, `api.triplewhale.com` erreichen. Codex: „Additional allowed domains“ (B3). Claude Code im Web: „Network access“ → „Custom“, „Allowed domains“ (B3a); die Standardstufe „Trusted“ sperrt beide. Claude Code lokal: nur bei eingeschalteter Sandbox nötig (B3a). Die Einstellung trägt der Media Buyer ein, nicht die KI.
 - **Geänderte Umgebung gilt erst nach „Republish“ (Codex) bzw. „Save changes“ (Claude Code) und in einem neuen Chat.** Nach B3 bzw. B3a immer: „Starte einen neuen Chat mit: Weiter mit der Einrichtung.“
-- **Bestätigen lässt der Entscheider:** `startup.json`, Profil `README.md` und Regeln sind Entscheidungsgrundlagen (`AGENTS.md`). Ist die Person im Chat nicht der Entscheider, braucht es dessen Ja.
+- **Bestätigen lässt der Entscheider:** `startup.json`, Profil `README.md` und Mandat sind Entscheidungsgrundlagen (`AGENTS.md`). Ist die Person im Chat nicht der Entscheider, braucht es dessen Ja.
 
 ## Was die KI allein macht
 
@@ -22,7 +22,7 @@ Ablauf für die KI, wenn ein neues Startup den Skill einrichtet. Die Klickwege f
 - Tests ausführen: `python3 -m unittest discover .agents/skills/media-buying/tests`. Schlagen sie fehl: melden, nicht weitermachen.
 - Testlauf auf Wunsch, ohne Zugänge: den Ablauf aus `SKILL.md` mit `MEDIA_BUYING_MODUS=test` vor jedem Befehl (z. B. `MEDIA_BUYING_MODUS=test python3 …/fetch_meta.py`). Er zeigt erfundene Daten und die Chat-Zusammenfassung des Berichts.
 - Konten, Währung und Zeitzone aus Meta übernehmen; Kampagnen ohne Verkaufsziel als `separat` vorschlagen.
-- Startregeln vorschlagen ([regelvorlagen.md](regelvorlagen.md)), mit den Zielwerten des Startups eingesetzt.
+- Das Ziel mit dem Entscheider formulieren ([mandat.md](mandat.md)); keine Regeln, Schwellen oder Prozentstaffeln vorschlagen.
 - Nach Bestätigung alle Dateien schreiben (Chat 2, Schritt 7), den Startup-Ordner umbenennen, prüfen.
 
 ## Ablauf
@@ -55,15 +55,16 @@ Codex richtet die Umgebung in einem eigenen Gespräch ein. Dort nur sicherstelle
    5. Welches Tagesbudget soll ein aktives Adset mindestens haben?
    6. Ist Meta euer Hauptmaßstab, und welche Attribution nutzt ihr (z. B. 7 Tage Klick, 1 Tag View)?
    7. Nur mit Triple Whale: Shop-Domain, Attributionsmodell und Fenster (Standard: Triple Attribution, lifetime).
-   8. Gibt es schon feste Regeln, wann ihr Budgets erhöht, senkt oder pausiert? Bitte wörtlich, sonst „keine“.
-   9. An welchem Tag hast du den Meta-Token erstellt (für die Erinnerung nach 6 Monaten)?
-5. **Media-Buying-Regeln festlegen** nach [regelvorlagen.md](regelvorlagen.md): eigene Regeln aus Frage 8 übernehmen, fehlende Themen als Vorschläge mit den eingesetzten Zielwerten vorstellen, je Vorschlag Bestätigung, Anpassung oder Ablehnung wörtlich festhalten. Nicht überspringen: Ohne Regeln meldet `einrichtung.py` die Einrichtung nicht als fertig.
-6. **Zusammenfassung** als kurze Tabelle (Stammdaten und Regeln), dann: „Stimmt das so? Antworte mit Ja oder nenne Korrekturen.“ Ohne ausdrückliches Ja nichts schreiben.
+   8. Was wollt ihr mit euren Meta-Ads erreichen? Was soll mit Adsets passieren, die gut laufen, und mit denen, die es nicht tun? In eigenen Worten; auf Wunsch das Beispiel aus [mandat.md](mandat.md) zeigen.
+   9. Gibt es Grenzen, die ich nie überschreiten darf (z. B. ein Gesamtbudget pro Tag)? Sonst „keine“.
+   10. An welchem Tag hast du den Meta-Token erstellt (für die Erinnerung nach 6 Monaten)?
+5. **Mandat festhalten** nach [mandat.md](mandat.md): das Ziel aus Frage 8 im Wortlaut, bei Bedarf mit zwei oder drei kurzen Fragen nachschärfen; Grenzen aus Frage 5 und 9 als Leitplanken. Nennt der Entscheider feste Regeln („ab ROAS X erhöhe ich um Y %“), nachfragen, ob das eine harte Grenze ist (dann Leitplanke) oder dem Urteil des Skills überlassen werden kann. Nicht überspringen: Ohne Ziel meldet `einrichtung.py` die Einrichtung nicht als fertig.
+6. **Zusammenfassung** als kurze Tabelle (Stammdaten und Mandat), dann: „Stimmt das so? Antworte mit Ja oder nenne Korrekturen.“ Ohne ausdrückliches Ja nichts schreiben.
 7. **Schreiben** nach dem Ja:
    - Ordner `startup/` nach dem Startup umbenennen (Kleinbuchstaben, z. B. `acme`), bei Bedarf mit `git mv`.
    - `startup.json` nach der Feldtabelle unten (auch `meta_token.erstellt`), zuletzt `"beispiel": false`.
    - Profil `README.md`: Name, Einrichtungsdatum, Konten mit Kampagnen, Daten und Attribution, Zielwerte mit Quelle („Einrichtung am <Datum>, <Name>“), Befugnisse.
-   - Regeln mit Quelle nach [regelvorlagen.md](regelvorlagen.md), Schritt 6.
+   - Mandat mit Quelle nach [mandat.md](mandat.md), Schritt 5.
    - Testdaten an die Kontoschlüssel anpassen (Format unten; Werte bleiben erfunden).
    - `docs/TODO.md` abhaken, `docs/CHANGELOG.md` (Einrichtung mit Datum und Person), `AKTUELL.md` („Letzte Sitzungen“ eine Zeile).
 8. `einrichtung.py` und Tests erneut. Erwartet: „Stand: alles bereit“.
@@ -80,7 +81,7 @@ Meldet jemand einen erneuerten Token (`ANLEITUNG.md`, B6) oder zeigt die Übersi
 |---|---|
 | `name`, `entscheider`, `systemverantwortlich` | Name des Startups und die beiden Rollen (Namen stehen nur hier) |
 | `zeitzone`, `waehrung`, `waehrungszeichen` | wie in den Meta-Konten, z. B. `Europe/Berlin`, `EUR`, `€` |
-| `mindestbudget`, `mindestbudget_regel` | Untergrenze aktiver Adsets und die Regel-ID dazu (ohne Regel: `OFFEN`) |
+| `mindestbudget`, `mindestbudget_regel` | Untergrenze aktiver Adsets und die ID der Leitplanke dazu (ohne Leitplanke: `OFFEN`) |
 | `zielwerte` | `break_even` je Produkt; `ziel_roas` als eine Zahl für alle Produkte oder je Produkt mit denselben Produktnamen wie `break_even`; `null` = OFFEN |
 | `konten` | je Konto: Schlüssel (Kurzname), `id` ohne `act_`, `label`, `meta_name`, eindeutiger `prefix` |
 | `meta_token` | `erstellt` (Datum, nie der Token) und `erneuern_nach_tagen` (180); der Skill erinnert 14 Tage vorher |
@@ -93,10 +94,10 @@ Meldet jemand einen erneuerten Token (`ANLEITUNG.md`, B6) oder zeigt die Übersi
 
 ## Erster echter Lauf
 
-Ohne Akten, Learnings und Historie zeigt der Skill alle Zahlen, nennt fehlende Grundlagen OFFEN und fragt nach Entscheidung und Begründung. Akten entstehen automatisch: `build_dataset.py` trägt für jedes aktive Adset die Änderungen der letzten 14 Tage aus Meta ein; danach kommen Vorschläge, Entscheidungen und Gründe hinzu.
+Ohne Akten, Learnings und Historie entscheidet der Skill nach Mandat und Fachwissen, nennt die dünne Datenlage offen und lernt aus den Korrekturen des Entscheiders. Akten entstehen automatisch: `build_dataset.py` trägt für jedes aktive Adset die Änderungen der letzten 14 Tage aus Meta ein; danach kommen Vorschläge, Entscheidungen und Gründe hinzu.
 
 ## Nie
 
 - Zugangsdaten erfragen, ausgeben oder speichern; `META_WRITE_ENABLED` setzen.
-- Werte oder Zielwerte erfinden oder schätzen; Regelvorschläge ohne ausdrückliche Bestätigung als Regel eintragen; `"beispiel": false` vor dem Ja des Entscheiders.
+- Werte oder Zielwerte erfinden oder schätzen; Ziel oder Leitplanken ohne ausdrückliche Bestätigung eintragen; von sich aus Regeln oder Schwellen vorschlagen; `"beispiel": false` vor dem Ja des Entscheiders.
 - Werbekonten ändern, auch nicht während der Einrichtung.

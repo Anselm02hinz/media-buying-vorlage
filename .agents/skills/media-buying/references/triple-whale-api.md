@@ -1,6 +1,6 @@
 # Triple-Whale-API
 
-Gegencheck zu Meta (ob und wie, regeln die Regeln des Startups). Einstellungen in `<startup>/startup.json` unter `triple_whale`: `aktiv` (false = ohne Triple Whale arbeiten), `shop_domain`, `modell`, `fenster`, `kanal`, `waehrung`. Zugang: `TRIPLEWHALE_API_KEY` (Header `x-api-key`, Scope Lesen); `TRIPLEWHALE_SHOP_DOMAIN` überschreibt bei Bedarf die Shop-Domain aus `startup.json`. Schlüssel testen: `GET https://api.triplewhale.com/api/v2/users/api-keys/me`.
+Gegencheck zu Meta (ob und wie, legt der Maßstab im Mandat des Startups fest). Einstellungen in `<startup>/startup.json` unter `triple_whale`: `aktiv` (false = ohne Triple Whale arbeiten), `shop_domain`, `modell`, `fenster`, `kanal`, `waehrung`. Zugang: `TRIPLEWHALE_API_KEY` (Header `x-api-key`, Scope Lesen); `TRIPLEWHALE_SHOP_DOMAIN` überschreibt bei Bedarf die Shop-Domain aus `startup.json`. Schlüssel testen: `GET https://api.triplewhale.com/api/v2/users/api-keys/me`.
 
 ## Abruf (`fetch_triple_whale.py`)
 

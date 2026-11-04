@@ -538,15 +538,24 @@ class Einrichtung(unittest.TestCase):
         self.assertIn("Schreibzugriff ist eingeschaltet", text)
         self.assertIn("Nächster Schritt:", text)
 
-    def test_regeln_noetig_formatbeispiel_zaehlt_nicht(self):
+    def test_mandat_braucht_ziel_leitplanken_freiwillig(self):
+        status = lambda out: [(b["status"], b["text"]) for b in out]  # noqa: E731
+        vorlage = ("# Mandat\n\n## Ziel\n\nOFFEN\n\n## Leitplanken\n\n"
+                   "```markdown\n## MB-0001 · v1 · <Titel>\n```\n")
         with tempfile.TemporaryDirectory() as tmp:
-            path = Path(tmp) / "MEDIA_BUYING_REGELN.md"
-            path.write_text("# Regeln\n\n```markdown\n## MB-0001 · v1 · <Titel>\n```\n", encoding="utf-8")
-            self.assertEqual(einrichtung.pruefe_regeln(path)[0]["status"], "FEHLT")
-            path.write_text(path.read_text(encoding="utf-8") + "\n## MB-0001 · v1 · Erhöhen\n\n## MB-0002 · v1 · Senken\n",
-                            encoding="utf-8")
-            out = einrichtung.pruefe_regeln(path)
-        self.assertEqual((out[0]["status"], out[0]["text"]), ("OK", "2 Media-Buying-Regeln festgelegt"))
+            ordner = Path(tmp)
+            self.assertEqual(einrichtung.pruefe_mandat(ordner)[0]["status"], "FEHLT")  # Datei fehlt
+            (ordner / "MANDAT.md").write_text(vorlage, encoding="utf-8")
+            out = einrichtung.pruefe_mandat(ordner)
+            self.assertEqual(out[0]["status"], "FEHLT")  # Ziel OFFEN; Formatbeispiel zählt nicht als Leitplanke
+            self.assertIn(("HINWEIS", "Keine Leitplanken (freiwillig; zum Mindestbudget empfohlen)"), status(out))
+            (ordner / "MANDAT.md").write_text(vorlage.replace("OFFEN", "Mit allen Adsets den Ziel-ROAS erreichen.")
+                                              + "\n## MB-0001 · v1 · Mindestbudget\n", encoding="utf-8")
+            (ordner / "MEDIA_BUYING_REGELN.md").write_text("## MB-0001 · v1 · Erhöhen\n", encoding="utf-8")
+            out = einrichtung.pruefe_mandat(ordner)
+        self.assertEqual([s for s, _ in status(out)], ["HINWEIS", "OK", "OK"])
+        self.assertIn("1 Regeln gelten als Leitplanken", out[0]["text"])
+        self.assertEqual(out[2]["text"], "1 Leitplanken")
 
     def test_token_erinnerung(self):
         from common import token_erinnerung

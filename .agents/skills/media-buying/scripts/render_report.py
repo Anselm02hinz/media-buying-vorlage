@@ -8,8 +8,9 @@ Erster Lauf: Entscheidungen als JSON (vorübergehend, z. B. in runden/YYYY-MM-DD
      "separat": "Text zu CBOs/Follower/Sonstigem (optional)",
      "grenzen": ["zusätzliche Hinweise zu Datenstand und Grenzen (optional)"],
      "entscheidungen": [{"id": "<adset_id>", "ziel_status": "ACTIVE|PAUSED", "ziel_budget": 44,
-                         "grund": "...", "regeln": ["MB-0003 v1", "L-03"], "kurzname": "Produkt A · Test 1"}]}
-    In "regeln" stehen Regel-IDs mit Version und die IDs bestätigter Learnings, die den Vorschlag geprägt haben.
+                         "grund": "...", "regeln": ["Mandat v1", "F-04", "L-03"], "kurzname": "Produkt A · Test 1"}]}
+    In "regeln" stehen die Grundlagen des Vorschlags: Mandat-Version, Leitplanken mit Version (MB-0001 v1),
+    Fachwissen (F-NN) und bestätigte Learnings (L-NN).
     python render_report.py --datenstand D-…-budget.json --entscheidungen entscheidungen.json
 
 Die Phase seit der letzten Änderung kommt aus dem Datenstand (build_dataset.py), nicht aus den Entscheidungen.
@@ -126,7 +127,7 @@ def decisions_from_plan(plan):
 
 
 def akte_vorschlag(plan, dataset):
-    """Je Planzeile ein Akteneintrag „Vorschlag“: Ist, Vorschlag des Skills, Grund, Regeln, Zahlen zum Zeitpunkt.
+    """Je Planzeile ein Akteneintrag „Vorschlag“: Ist, Vorschlag des Skills, Grund, Grundlagen, Zahlen zum Zeitpunkt.
     Solange die Freigabe offen ist, ersetzt ein neues Rendern den Eintrag (noch keine Historie)."""
     by_id = {r["id"]: r for r in dataset["rows"]}
     fenster = dataset["fenster"]
@@ -397,7 +398,7 @@ def budget_effect(r):
 
 
 def learnings_text(rows):
-    """Wie oft bestätigte Learnings (IDs „L-NN“ in der Regelliste) Vorschläge geprägt haben, z. B.
+    """Wie oft bestätigte Learnings (IDs „L-NN“ in den Grundlagen) Vorschläge geprägt haben, z. B.
     „Angewendete Learnings: L-01 ×3 · L-03 ×1“; leer, wenn keines."""
     used = Counter(rule for r in rows for rule in r.get("rules", []) if re.fullmatch(r"L-\d+", rule.strip()))
     return ("Angewendete Learnings: " + " · ".join(f"{k} ×{v}" for k, v in sorted(used.items()))) if used else ""
@@ -471,7 +472,7 @@ def main():
         "lauftag": dataset["lauftag"],
         "change_id": change_id, "report_id": report_id,
         "dataset_id": dataset["id"], "status": "VORGESCHLAGEN",
-        "rulebook": f"{STARTUP_DIR.name}/regeln/MEDIA_BUYING_REGELN.md (Stand laut Datei)",
+        "rulebook": f"{STARTUP_DIR.name}/regeln/MANDAT.md und Fachwissen des Skills (Stand laut Dateien)",
         "approval": {"status": "OFFEN", "by": None, "at": None, "wortlaut": None},
         "execution": {"weg": None, "status": "NICHT_AUSGEFUEHRT"}, "verification_file": None,
         "rollback": "Vorherwerte budget/status je Zeile. Rücknahme nur nach neuer Freigabe.",

@@ -1,11 +1,11 @@
 {
-  "_hinweis": "Stammdaten des Startups. Die Skripte lesen alle startup-spezifischen Werte nur hier. Hintergrund und Quellen stehen im Profil README.md, die Regeln in regeln/MEDIA_BUYING_REGELN.md. Felder mit _hinweis erklären das Feld davor. Ausfüllen bei der Einrichtung (references/einrichtung.md des Skills).",
+  "_hinweis": "Stammdaten des Startups. Die Skripte lesen alle startup-spezifischen Werte nur hier. Hintergrund und Quellen stehen im Profil README.md, Ziel und Leitplanken im Mandat regeln/MANDAT.md. Felder mit _hinweis erklären das Feld davor. Ausfüllen bei der Einrichtung (references/einrichtung.md des Skills).",
   "beispiel": true,
   "beispiel_hinweis": "true = Beispielwerte aus der Vorlage; dann ist nur ein Testlauf erlaubt. Erst auf false setzen, wenn alle Werte vom Entscheider bestätigt sind.",
 
   "name": "Beispiel-Startup",
   "entscheider": "Vorname Nachname",
-  "entscheider_hinweis": "Gibt Budgetpläne frei, gibt Regeln vor und setzt freigegebene Pläne um, solange der Schreibzugriff gesperrt ist.",
+  "entscheider_hinweis": "Gibt Budgetpläne frei, legt das Mandat fest und setzt freigegebene Pläne um, solange der Schreibzugriff gesperrt ist.",
   "systemverantwortlich": "Vorname Nachname",
   "systemverantwortlich_hinweis": "Pflegt das System; darf zusammen mit dem Entscheider den Schreibzugriff freischalten.",
 
@@ -15,7 +15,7 @@
 
   "mindestbudget": 20,
   "mindestbudget_regel": "OFFEN",
-  "mindestbudget_hinweis": "Aktive Adsets nie unter diesem Tagesbudget; eine begründete Kürzung darunter wird zur Pause. Wert und Regel-ID vom Entscheider bestätigen lassen.",
+  "mindestbudget_hinweis": "Aktive Adsets nie unter diesem Tagesbudget; eine begründete Kürzung darunter wird zur Pause. Wert vom Entscheider bestätigen lassen; mindestbudget_regel = ID der Leitplanke im Mandat (ohne Leitplanke OFFEN).",
 
   "zielwerte": {
     "ziel_roas": null,

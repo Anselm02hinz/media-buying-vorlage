@@ -2,6 +2,19 @@
 
 Änderungen am Kern (Skill, Skripte, Tests, Arbeitsanweisung, Vorlage), neueste oben. Änderungen eines Startups stehen in dessen `<startup>/docs/CHANGELOG.md`. Dieses Repository ist die neutrale Vorlage: Kernänderungen zuerst hier eintragen und dann in die Startup-Repositorys übertragen (Skill-Ordner und Einstiegsdateien im Root ersetzen, nie den Startup-Ordner).
 
+## 2.0 · 2026-11-04 · Mandat und Fachwissen statt Startregeln
+
+Auftrag: Anselm Hinz. Grund: Starre Startregeln („ab ROAS X um 20 % erhöhen“), die sich ein Startup bei der Einrichtung ausdenkt, sind meist willkürlich. Der Skill soll wie ein Media-Buying-Dienstleister arbeiten: Das Startup nennt sein Ziel, der Skill entscheidet je Runde mit Fachwissen und allen Daten, der Entscheider gibt frei oder korrigiert.
+
+- **Mandat** (`<startup>/regeln/MANDAT.md`, ersetzt `MEDIA_BUYING_REGELN.md`): Ziel im Wortlaut des Entscheiders, Maßstab, optionale Leitplanken (harte Grenzen, IDs `MB-NNNN` wie bisher). Einrichtung nach `references/mandat.md` (ersetzt `references/regelvorlagen.md`); keine Regelvorlagen mehr. `REGELVORSCHLAEGE.md` entfällt: Die KI leitet keine Regeln ab.
+- **Fachwissen** (`references/fachwissen.md`, neu): Grundsätze für Datenlage, Lernphase, Budgetschritte, Skalieren, Senken, Abschalten, Wirtschaftlichkeit und Störungen, mit Quellen und Einordnung (offiziell Meta, Branchenpraxis, Faustwert). Liest der Skill in jeder Runde vollständig; IDs `F-NN` in den Grundlagen der Vorschläge.
+- **Entscheiden** (`AGENTS.md`, `SKILL.md`, `PRUEFREIHENFOLGE.md`): Rangfolge Leitplanken → Mandat → bestätigte Learnings → Fachwissen. Kein „im Zweifel halten“ mehr; auch Halten braucht einen fachlichen Grund. Der Modus GEMEINSAM_LERNEN (erst fragen) wird ersetzt durch „vorschlagen wie ein Dienstleister, aus Korrekturen lernen“.
+- **Learnings** (`references/dokumentation.md`): halten fest, wo der Entscheider anders gewichtet als das Fachwissen; bestätigte Learnings gehen dem Fachwissen vor, nie dem Mandat. Verbindlich wird ein Learning als Leitplanke.
+- **`scripts/einrichtung.py`:** prüft `pruefe_mandat` (Ziel nötig, Leitplanken freiwillig, Hinweis auf eine alte `MEDIA_BUYING_REGELN.md`) statt mindestens einer Regel; Kerndateien `references/mandat.md` und `references/fachwissen.md`.
+- **`scripts/render_report.py`:** `regeln` je Entscheidung heißt jetzt Grundlagen (`["Mandat v1", "F-04", "L-03"]`); Feld und Format unverändert.
+- **Doku und Vorlage:** `ANLEITUNG.md`, `README.md`, `references/einrichtung.md` (Fragen 8–10), `startup/` (Mandat, Prüfreihenfolge, Learnings, AKTUELL, Profil, TODO, Änderungsverlauf, Hinweise in `startup.json`). Tests angepasst.
+- **Übertragen in Startup-Repositorys:** Skill-Ordner und Einstiegsdateien im Root ersetzen. Im Startup-Ordner bleibt `regeln/MEDIA_BUYING_REGELN.md` vorerst gültig (als Leitplanken); in der nächsten Sitzung mit dem Entscheider das Mandat festlegen (`references/mandat.md`, „Bestehende Startups mit Regeln“), `REGELVORSCHLAEGE.md` dabei auflösen. `einrichtung.py` meldet bis dahin „Noch kein Ziel im Mandat“.
+
 ## 1.2 · 2026-11-04 · Erlaubte Domains für Codex und Claude Code
 
 Auftrag: Anselm Hinz. Grund: Die Anleitung nannte die nötigen Domains nur für Codex. In Claude Code im Web sperrt die Standardstufe „Trusted“ Meta und Triple Whale.

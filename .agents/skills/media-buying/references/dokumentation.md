@@ -9,16 +9,16 @@ Jede Information steht an einer Stelle; andere Dateien verlinken nur. **Ausnahme
 ├── startup.json          Stammdaten für die Skripte (Name, Rollen, Konten, Währung, Zeitzone, Zielwerte, Mindestbudget, Triple Whale)
 ├── README.md             Profil: Konten, Daten und Attribution, Zielwerte mit Quellen, Befugnisse, Abweichungen von AGENTS.md
 ├── AKTUELL.md            Einstieg jeder Sitzung
-├── LEARNINGS.md          wie der Entscheider im Spielraum der Regeln entscheidet
-├── regeln/               Regeln des Entscheiders, Prüfreihenfolge, ggf. Systemregeln, Regelvorschläge der KI
+├── LEARNINGS.md          wie der Entscheider entscheidet (geht dem allgemeinen Fachwissen vor)
+├── regeln/               MANDAT.md (Ziel, Maßstab, Leitplanken), Prüfreihenfolge, ggf. Systemregeln
 ├── akten/                Akte je Adset: meta_<konto>_<adset>.md (Gedächtnis des Skills)
 ├── runden/YYYY-MM-DD/    alles einer Runde: Datenstand, Übersicht, Bericht, Plan, Verifikation; rohdaten/ nur lokal
 ├── testdaten/            testdaten.json (erfunden); testlaeufe/ mit denselben Unterordnern runden/ und akten/
 └── docs/                 liest der Skill in einer Runde nicht: quellen/ (Originalquellen Q-…), regelhistorie/
-                          (alte Regelfassungen, Änderungsverlauf), TODO.md, CHANGELOG.md
+                          (alte Fassungen von Mandat und Leitplanken, Änderungsverlauf), TODO.md, CHANGELOG.md
 ```
 
-Faustregel: Was der Skill in einer normalen Runde liest oder schreibt, liegt direkt in `<startup>/` oder in `regeln/`, `akten/`, `runden/`. Was nur belegt, beschreibt oder den Verlauf festhält, liegt in `docs/`. Verweise möglichst über IDs (`R-…`, `A-…`, `D-…`, `Q-…`, `MB-…`, `L-…`) statt über Pfade; IDs bleiben bei einem Umzug gültig.
+Faustregel: Was der Skill in einer normalen Runde liest oder schreibt, liegt direkt in `<startup>/` oder in `regeln/`, `akten/`, `runden/`. Was nur belegt, beschreibt oder den Verlauf festhält, liegt in `docs/`. Verweise möglichst über IDs (`R-…`, `A-…`, `D-…`, `Q-…`, `MB-…` für Leitplanken, `F-…` für Fachwissen, `L-…`) statt über Pfade; IDs bleiben bei einem Umzug gültig.
 
 ## Was wo steht
 
@@ -50,21 +50,21 @@ Die Skripte schreiben die Akten; die KI ändert sie nicht von Hand. Jeder Eintra
 Einstieg jeder Sitzung. Keine Verlaufseinträge anhängen, sondern die Abschnitte überschreiben:
 
 - **Letzte Budgetrunde:** Datum, Status, Links, Budgetsummen je Konto.
-- **Letzte Sitzungen:** je Sitzung 1–2 Zeilen (Datum, was passiert ist, Entscheidungen im Gespräch, die sonst nirgends stehen, z. B. Rückfragen im Lernmodus und ihre Antworten); nur die letzten fünf, ältere löschen (Verlauf in Git). Am Ende jeder Sitzung ergänzen, auch wenn sie ohne Freigabe oder mit einem Abbruch endet.
+- **Letzte Sitzungen:** je Sitzung 1–2 Zeilen (Datum, was passiert ist, Entscheidungen im Gespräch, die sonst nirgends stehen, z. B. Rückfragen an den Entscheider und seine Antworten); nur die letzten fünf, ältere löschen (Verlauf in Git). Am Ende jeder Sitzung ergänzen, auch wenn sie ohne Freigabe oder mit einem Abbruch endet.
 - **Für die nächste Runde:** offene Wirkungskontrollen, Haltefristen und Einzelfallanweisungen des Entscheiders, offene Fragen, bekannte Störungen und Kontext (z. B. Kampagnenbudgets).
 
 Erledigte Hinweise löschen. Werte je Adset und Wortlaute von Auftrag und Freigabe stehen im Plan; hier nur verlinken.
 
 ## Learnings
 
-Eine Datei `<startup>/LEARNINGS.md` mit drei Abschnitten: **Bestätigt**, **Kandidaten**, **Überholt**. Learnings halten fest, wie der Entscheider **im Spielraum der Regeln** entscheidet. Regeln sind Pflicht und setzen den Rahmen; ein Learning wählt nur innerhalb dieses Rahmens und wirkt nie gegen eine Regel. Nur bestätigte Learnings beeinflussen Vorschläge.
+Eine Datei `<startup>/LEARNINGS.md` mit drei Abschnitten: **Bestätigt**, **Kandidaten**, **Überholt**. Learnings halten fest, wie der Entscheider entscheidet: wo Mandat und Fachwissen Spielraum lassen oder wo er anders gewichtet als das allgemeine Fachwissen (z. B. wie stark er skaliert, wann er einem Test mehr Zeit gibt). Bestätigte Learnings gehen dem Fachwissen vor, wirken aber nie gegen Mandat oder Leitplanken. Nur bestätigte Learnings beeinflussen Vorschläge.
 
 ### Format
 
 ```markdown
 ### L-NN · <Muster in einem Satz>
 Status: Kandidat | bestätigt (<Name>, <Datum>, „<Wortlaut>“) | überholt (<Datum>, <Grund>)
-Spielraum von: <Regel-ID und Version, deren offenen Spielraum es füllt>
+Bezug: <Fachwissen-ID, die es präzisiert oder von der es abweicht, bzw. Teil des Mandats>
 Wann: <Situation mit prüfbaren Merkmalen aus der Übersicht>
 <Name des Entscheiders> entscheidet: <was der Entscheider in dieser Situation tut>
 Begründung: <Wortlaut des Entscheiders, falls genannt>
@@ -73,7 +73,7 @@ Gegenbeispiele: <Fälle, in denen er anders entschied>
 Wirkung: offen | <Auswertung>
 ```
 
-Ohne passende Regel unter „Spielraum von“ gibt es kein Learning; solche Fragen gehören in `<startup>/regeln/REGELVORSCHLAEGE.md`. IDs fortlaufend (L-01, L-02 …), nie neu vergeben.
+IDs fortlaufend (L-01, L-02 …), nie neu vergeben.
 
 ### Entstehung
 
@@ -82,6 +82,6 @@ Ohne passende Regel unter „Spielraum von“ gibt es kein Learning; solche Frag
 3. **Rückfrage:** Im nächsten Bericht höchstens ein bis zwei Kandidaten als Frage an den Entscheider (`notizen`, „Fragen an den Entscheider“), konkret formuliert („Mir fällt auf: … Soll ich das künftig so vorschlagen?“).
 4. **Bestätigt:** Antwortet der Entscheider zustimmend, auch eingeschränkt („ja, aber nur wenn …“), Status mit Name, Datum und Wortlaut setzen und die Einschränkung unter „Wann“ übernehmen. Formuliert er selbst einen allgemeinen Grund („künftig …“, „grundsätzlich …“), gilt das als Bestätigung.
 5. **Pflege:** Neue passende Fälle als Beleg ergänzen. Korrigiert der Entscheider einen Vorschlag, der sich auf ein Learning stützte, als Gegenbeispiel eintragen; bei wiederholten Gegenbeispielen nachfragen und gegebenenfalls „überholt“ setzen. Lehnt er einen Kandidaten ab, „überholt“ mit Grund.
-6. **Regel:** Will der Entscheider ein Learning verbindlich machen, Weg über `REGELVORSCHLAEGE.md` und die Regelpflege nach `AGENTS.md`.
+6. **Leitplanke:** Will der Entscheider ein Learning als harte Grenze, wird es eine Leitplanke im Mandat (`AGENTS.md`, „Mandat und Leitplanken“).
 
 Einzelfall-Beobachtungen zu einem Adset gehören in dessen Akte, nicht in die Learnings.

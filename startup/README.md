@@ -27,16 +27,16 @@ Nur diese Konten gehören zum Auftrag; andere Konten nicht abfragen oder bearbei
 | Break-even-ROAS je Produkt | `zielwerte.break_even` | OFFEN |
 | Ziel-ROAS (für alle Produkte oder je Produkt) | `zielwerte.ziel_roas` | OFFEN |
 | Mindestbudget aktiver Adsets | `mindestbudget`, darunter pausieren | OFFEN |
-| Ziel-CPA, Testbudget, Budgetobergrenzen, Skalierungsstaffel, Mindestdaten | OFFEN | keine eigenen Werte setzen |
+| Weitere harte Grenzen (z. B. Gesamtbudget) | nur als Leitplanke in `regeln/MANDAT.md` | keine eigenen Werte setzen |
 
-Break-even und Ziel-ROAS nicht gleichsetzen. Liegt ein Fall zwischen beiden, mit dem Entscheider klären.
+Break-even und Ziel-ROAS nicht gleichsetzen. Ziel, Maßstab und Leitplanken stehen im [Mandat](regeln/MANDAT.md).
 
 ## Befugnisse
 
-- **Entscheider** und **Systemverantwortlicher**: Namen in `startup.json`. Der Entscheider gibt Budgetpläne frei, gibt Regeln vor und setzt freigegebene Pläne um, solange der Schreibzugriff gesperrt ist; sein Name wird bei `plan.py freigeben --von` eingetragen.
-- Modus GEMEINSAM_LERNEN. Kontoänderungen nur nach ausdrücklicher Freigabe eines konkreten Plans durch den Entscheider.
+- **Entscheider** und **Systemverantwortlicher**: Namen in `startup.json`. Der Entscheider gibt Budgetpläne frei, legt das Mandat fest und setzt freigegebene Pläne um, solange der Schreibzugriff gesperrt ist; sein Name wird bei `plan.py freigeben --von` eingetragen.
+- Der Skill schlägt wie ein Media-Buying-Dienstleister selbst vor (Mandat und Fachwissen); Kontoänderungen nur nach ausdrücklicher Freigabe eines konkreten Plans durch den Entscheider.
 - Schreibzugriff per API: **gesperrt** (Token nur `ads_read`, `META_WRITE_ENABLED` nicht gesetzt). Freigegebene Pläne setzt der Entscheider im Ads Manager um. Die KI ändert nie über Browser oder andere Wege.
-- Eine spätere dauerhafte Delegation hier festhalten mit: Konten und erlaubten Aktionen, Budget-/Zeitgrenzen, gültigen Regelversionen, Beginn/Ende, Quelle.
+- Eine spätere dauerhafte Delegation hier festhalten mit: Konten und erlaubten Aktionen, Budget-/Zeitgrenzen, gültiger Mandatsversion, Beginn/Ende, Quelle.
 
 ## Ergänzungen und Abweichungen zur Arbeitsanweisung
 

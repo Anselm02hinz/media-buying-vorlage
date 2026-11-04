@@ -25,7 +25,7 @@ TW_TEST = "https://api.triplewhale.com/api/v2/users/api-keys/me"
 # Kerndateien; die mit Punkt am Anfang fehlen nach einem Upload leicht, weil sie versteckt sind
 KERN = ("AGENTS.md", "ANLEITUNG.md", "README.md", ".gitignore", ".env.example",
         ".agents/skills/media-buying/SKILL.md", ".agents/skills/media-buying/references/einrichtung.md",
-        ".agents/skills/media-buying/references/regelvorlagen.md")
+        ".agents/skills/media-buying/references/mandat.md", ".agents/skills/media-buying/references/fachwissen.md")
 # Schritte der Einrichtung in ihrer Reihenfolge: (Schlüssel, Name, was zu tun ist)
 SCHRITTE = [
     ("upload", "Upload", "Fehlende Dateien nachladen: versteckte Dateien einblenden und erneut hochladen "
@@ -38,8 +38,8 @@ SCHRITTE = [
                                    "Danach einen neuen Chat starten."),
     ("konten", "Werbekonten", "Werbekonten aus der Liste auswählen; die KI trägt sie in startup.json ein."),
     ("angaben", "Angaben zum Startup", "Fragen zum Startup beantworten (Fragenblock in references/einrichtung.md)."),
-    ("regeln", "Media-Buying-Regeln", "Startregeln festlegen: Die KI schlägt sie vor (references/regelvorlagen.md), "
-                                      "der Entscheider bestätigt oder passt an."),
+    ("mandat", "Mandat", "Ziel des Startups in eigenen Worten festhalten: Die KI fragt danach und schreibt es nach dem "
+                         "Ja des Entscheiders in regeln/MANDAT.md (references/mandat.md)."),
     ("triple_whale", "Triple Whale", "Triple-Whale-Key anlegen, in der Umgebung als TRIPLEWHALE_API_KEY eintragen und "
                                      "speichern (ANLEITUNG.md, B2 und B3; Claude Code: B3a), danach einen neuen Chat "
                                      "starten."),
@@ -75,7 +75,8 @@ def pruefe_stammdaten(startup, ordnername):
             out.append(befund("FEHLT", "konten", f"Konto {key!r}: noch die Beispiel-ID"))
     out += pruefe_zielwerte(startup.get("zielwerte") or {})
     if startup.get("mindestbudget_regel") in (None, "", "OFFEN"):
-        out.append(befund("OFFEN", "angaben", f"Mindestbudget {startup.get('mindestbudget')}: ohne Regel-ID (OFFEN)"))
+        out.append(befund("OFFEN", "angaben", f"Mindestbudget {startup.get('mindestbudget')}: ohne Leitplanke "
+                                              "im Mandat (OFFEN)"))
     tw = startup.get("triple_whale") or {}
     if tw.get("aktiv") and not (tw.get("shop_domain") or os.environ.get("TRIPLEWHALE_SHOP_DOMAIN")):
         out.append(befund("FEHLT", "angaben", "Triple Whale aktiv, aber shop_domain fehlt"))
@@ -122,16 +123,34 @@ def pruefe_zielwerte(z):
     return out
 
 
-def pruefe_regeln(path):
-    """Mindestens eine Regel: Abschnitt „## MB-NNNN“ außerhalb von Codeblöcken (dort steht nur das Format)."""
-    if not path.exists():
-        return [befund("FEHLT", "regeln", f"{path.name} fehlt")]
+def leitplanken(path):
+    """Anzahl der Abschnitte „## MB-NNNN“ außerhalb von Codeblöcken (dort steht nur das Format)."""
     text = re.sub(r"```.*?```", "", path.read_text(encoding="utf-8"), flags=re.S)
-    n = len(re.findall(r"^## MB-\d{4}\b", text, flags=re.M))
-    if not n:
-        return [befund("FEHLT", "regeln", "Noch keine Media-Buying-Regeln; ohne Regeln hat der Skill keine "
-                                          "Entscheidungsgrundlage")]
-    return [befund("OK", "regeln", f"{n} Media-Buying-Regeln festgelegt")]
+    return len(re.findall(r"^## MB-\d{4}\b", text, flags=re.M))
+
+
+def pruefe_mandat(ordner):
+    """Mandat in regeln/MANDAT.md: Abschnitt „## Ziel“ mit Text des Entscheiders (nicht OFFEN). Leitplanken sind
+    freiwillig. Regeln einer früheren Version (MEDIA_BUYING_REGELN.md) gelten bis zur Umstellung als Leitplanken."""
+    path, alt, out = ordner / "MANDAT.md", ordner / "MEDIA_BUYING_REGELN.md", []
+    if alt.exists():
+        out.append(befund("HINWEIS", "mandat", f"{alt.name} aus einer früheren Version: {leitplanken(alt)} Regeln "
+                                               "gelten als Leitplanken; ins Mandat übernehmen (references/mandat.md)"))
+    if not path.exists():
+        return out + [befund("FEHLT", "mandat", f"{path.name} fehlt; ohne Ziel hat der Skill keine "
+                                                "Entscheidungsgrundlage")]
+    text = re.sub(r"```.*?```", "", path.read_text(encoding="utf-8"), flags=re.S)
+    m = re.search(r"^## Ziel[ \t]*\n(.*?)(?=^## |\Z)", text, flags=re.M | re.S)
+    ziel = m.group(1).strip() if m else ""
+    if not ziel or ziel.upper().startswith("OFFEN"):
+        out.append(befund("FEHLT", "mandat", "Noch kein Ziel im Mandat (regeln/MANDAT.md, Abschnitt „Ziel“); ohne "
+                                             "Ziel hat der Skill keine Entscheidungsgrundlage"))
+    else:
+        out.append(befund("OK", "mandat", "Mandat mit Ziel festgelegt"))
+    n = leitplanken(path)
+    out.append(befund("OK", "mandat", f"{n} Leitplanken") if n
+               else befund("HINWEIS", "mandat", "Keine Leitplanken (freiwillig; zum Mindestbudget empfohlen)"))
+    return out
 
 
 def pruefe_token(startup, heute, token_gesetzt):
@@ -279,7 +298,7 @@ def main():
     env, version = os.environ, META_API_VERSION
     gesehen, token = None, env.get("META_ACCESS_TOKEN")
     befunde = (pruefe_dateien(ROOT) + pruefe_stammdaten(STARTUP, STARTUP_DIR.name)
-               + pruefe_regeln(STARTUP_DIR / "regeln" / "MEDIA_BUYING_REGELN.md")
+               + pruefe_mandat(STARTUP_DIR / "regeln")
                + pruefe_testdaten(ACCOUNTS, FIXTURE) + pruefe_zugaenge(env, TW["aktiv"], TEST_MODE)
                + pruefe_token(STARTUP, datetime.now(TZ).date(), bool(token) and not TEST_MODE))
     if token and not TEST_MODE:
